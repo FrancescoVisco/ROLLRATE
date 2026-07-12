@@ -1,0 +1,86 @@
+using UnityEngine;
+using Rollrate.Data;
+
+namespace Rollrate.Core
+{
+    /// <summary>
+    /// Single access point to the current GameState. Attach this to one
+    /// GameObject that persists across scenes (DontDestroyOnLoad).
+    ///
+    /// For now this only holds state and exposes basic run-lifecycle calls.
+    /// Map transitions, combat triggers, and shop calls will hook into this
+    /// later as those systems get built.
+    /// </summary>
+    public class RunManager : MonoBehaviour
+    {
+        public static RunManager Instance { get; private set; }
+
+        public GameState State { get; private set; } = new GameState();
+
+        [Header("Starting Values")]
+        [SerializeField] private DieData startingCoreDie; // assign the D4 asset here
+        [SerializeField] private int startingHp = 10;
+
+        [Header("Debug Only - Test Dice Pool")]
+        [Tooltip("Dice assigned here are added to the pool at the start of a new run, purely for testing. Remove/empty this once the Shop can add dice for real.")]
+        [SerializeField] private DieData[] debugStartingPool;
+
+        [Header("Debug Only - Test Modules")]
+        [Tooltip("One module per slot, assigned at run start purely for testing. Remove/empty this once the Shop can install modules for real.")]
+        [SerializeField] private ModuleData debugPowerModule;
+        [SerializeField] private ModuleData debugStabilityModule;
+        [SerializeField] private ModuleData debugFlowModule;
+        [SerializeField] private ModuleData debugEchoModule;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void Start()
+        {
+            StartNewRun();
+        }
+
+        public void StartNewRun()
+        {
+            State.ResetForNewRun(startingCoreDie, startingHp);
+
+            // Debug only: seed the pool with test dice so DiceRoller has more
+            // than just the Core to roll, before the Shop can add dice for real.
+            if (debugStartingPool != null)
+            {
+                foreach (var die in debugStartingPool)
+                {
+                    if (die != null) State.dicePool.Add(die);
+                }
+            }
+
+            // Debug only: install test modules directly, before the Shop can do it for real.
+            if (debugPowerModule != null) State.installedModules[SlotType.Power] = debugPowerModule;
+            if (debugStabilityModule != null) State.installedModules[SlotType.Stability] = debugStabilityModule;
+            if (debugFlowModule != null) State.installedModules[SlotType.Flow] = debugFlowModule;
+            if (debugEchoModule != null) State.installedModules[SlotType.Echo] = debugEchoModule;
+
+            Debug.Log($"[RunManager] New run started. Core: {State.coreDie?.displayName}, HP: {State.currentHp}, Pool size: {State.dicePool.Count}");
+        }
+
+        /// <summary>
+        /// Call this when the player's HP reaches 0. Applies the Fragmentation
+        /// rule (Core Die level + Scrap persist, everything else resets) and
+        /// sends the player back to Echelon I.
+        /// </summary>
+        public void HandleDefeat()
+        {
+            Debug.Log($"[RunManager] Defeat. Fragmenting. Core stays at {State.coreDie?.displayName}, Scrap kept: {State.scrap}");
+            State.ApplyFragmentation(startingHp);
+        }
+    }
+}

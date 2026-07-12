@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04f0c67509a2c4c4a8aec41c33d583c7, type: 3}
+  m_Name: Charge
+  m_EditorClassIdentifier: 
+  id: 0
+  slot: 0
+  displayName: Charge
+  flavorText: Accumulation
+  staticEffectDescription: The placed die hits twice
+  frequencyEffectDescription: 'Even: Adds the Core die''s value to the final total'
+  costPerGrade: 1e0000002d0000003c0000005000000064000000
+  icon: {fileID: 0}

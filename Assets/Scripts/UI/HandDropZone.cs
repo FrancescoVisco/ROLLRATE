@@ -20,7 +20,7 @@ namespace Rollrate.UI
             if (droppedObject == null) return;
 
             var die = droppedObject.GetComponent<DraggableDie>();
-            if (die == null || die.isCoreDie) return;
+            if (die == null || die.isLocked) return;
 
             var dieRect = die.GetComponent<RectTransform>();
             dieRect.SetParent(transform, true);

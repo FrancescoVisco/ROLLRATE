@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca75a3eae762184bab4ef5f3ed1413d, type: 3}
+  m_Name: Tracer
+  m_EditorClassIdentifier: 
+  displayName: Fragment
+  flavorText: Active security protocol
+  maxHp: 14
+  baseThreshold: 14
+  inhibitorDie: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
+  abilityId: 3
+  abilityDescription: 1 direct HP damage if Threshold not exceeded
+  icon: {fileID: 0}

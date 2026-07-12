@@ -1,22 +1,30 @@
 namespace Rollrate.Combat.Modules
 {
     /// <summary>
-    /// Reverse (Flow) - Static: choose a die - flip its value
-    /// (e.g. on a D6: 1&lt;-&gt;6, 2&lt;-&gt;5).
-    /// Frequency (Low DCD): Total Inversion - flip the dice of all occupied
-    /// slots on the board.
-    ///
-    /// Note: "choose a die" / "all occupied slots" target dice beyond this
-    /// module's own slot - the actual flip logic needs access to the full
-    /// board state, which isn't wired up yet. Reported via DebugLog for now.
+    /// Reverse (Flow) - Static: the chosen target die's value is flipped
+    /// (e.g. on a D6: 1&lt;-&gt;6, 2&lt;-&gt;5), using the formula
+    /// newValue = faces + 1 - currentValue.
+    /// Frequency (Low DCD): Total Inversion - flips every occupied slot's
+    /// die instead of just the chosen target. This board-wide part is
+    /// applied by CombatController directly (it needs access to all 4
+    /// slots, not just this one's target), which also skips applying this
+    /// Static single-target flip when Total Inversion triggers, so the
+    /// target die isn't flipped twice.
     /// </summary>
     public class ReverseLogic : ModuleLogicBase
     {
         public override ModuleResult ApplyStaticEffect(int dieValue, CombatContext ctx)
         {
+            if (!ctx.TargetDieValue.HasValue)
+            {
+                return new ModuleResult { DebugLog = "Reverse: no target die chosen - no effect" };
+            }
+
+            int newValue = ctx.TargetDieFaces + 1 - ctx.TargetDieValue.Value;
             return new ModuleResult
             {
-                DebugLog = "Reverse: TODO wire up target-die selection - flip a chosen die's value"
+                NewTargetValue = newValue,
+                DebugLog = $"Reverse: target die {ctx.TargetDieValue.Value} -> {newValue} (flipped on {ctx.TargetDieFaces} faces)"
             };
         }
 
@@ -27,9 +35,12 @@ namespace Rollrate.Combat.Modules
 
         public override ModuleResult ApplyFrequencyEffect(int dieValue, CombatContext ctx)
         {
+            // No NewTargetValue here on purpose - the board-wide flip is
+            // handled separately by CombatController once it sees
+            // FrequencyTriggered = true for this module.
             return new ModuleResult
             {
-                DebugLog = "Reverse Frequency: TODO wire up board-wide flip of all occupied slots"
+                DebugLog = "Reverse Frequency: Total Inversion - every occupied slot's die is flipped by CombatController"
             };
         }
     }

@@ -18,11 +18,20 @@ namespace Rollrate.Combat
         /// Resolves one slot. Returns an empty ModuleResult if there's no
         /// module installed or no die placed.
         /// </summary>
+        /// <param name="ignoreInhibition">
+        /// True if Resonance (Legame or Totale) makes this slot ignore
+        /// enemy Inhibition regardless of the placed die's value.
+        /// </param>
+        /// <param name="forceFrequency">
+        /// True during Full Resonance's "Sovraccarico Moduli": applies the
+        /// Frequency Effect even if the Core condition isn't met.
+        /// </param>
         public static ModuleResult ResolveSlot(
             ModuleData installedModule,
             int? placedDieValue,
             CombatContext ctx,
-            bool ignoreInhibition = false)
+            bool ignoreInhibition = false,
+            bool forceFrequency = false)
         {
             if (installedModule == null || placedDieValue == null)
             {
@@ -35,18 +44,35 @@ namespace Rollrate.Combat
             // Static Effect always applies.
             ModuleResult result = logic.ApplyStaticEffect(dieValue, ctx);
 
-            // Frequency Effect applies only if the Core condition is met AND
-            // the die isn't inhibited this turn (unless Resonance overrides it).
-            bool isInhibited = !ignoreInhibition && dieValue == ctx.InhibitedValue;
-            bool conditionMet = logic.IsFrequencyConditionMet(ctx);
+            // Frequency Effect applies if the Core condition is met AND the
+            // die isn't inhibited (unless Resonance overrides either check).
+            bool isInhibited = !ignoreInhibition && IsValueInhibited(dieValue, ctx);
+            bool conditionMet = forceFrequency || logic.IsFrequencyConditionMet(ctx);
 
             if (conditionMet && !isInhibited)
             {
                 ModuleResult freqResult = logic.ApplyFrequencyEffect(dieValue, ctx);
                 result = Combine(result, freqResult);
+                result.FrequencyTriggered = true;
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// True if the given value is inhibited this turn under any of the
+        /// three inhibition sources: the base Inhibitor Die roll, an enemy
+        /// ability's extra inhibited value (e.g. Sentinel), or a permanently
+        /// inhibited value accumulated over the fight (e.g. Judge). Used
+        /// both for gating Frequency Effects and for the die's on-screen
+        /// "inhibited" visual indicator.
+        /// </summary>
+        public static bool IsValueInhibited(int value, CombatContext ctx)
+        {
+            bool matchesBaseInhibition = value == ctx.InhibitedValue;
+            bool matchesExtraInhibition = ctx.ExtraInhibitedValue >= 0 && value == ctx.ExtraInhibitedValue;
+            bool matchesPermanentInhibition = ctx.PermanentlyInhibitedValues != null && ctx.PermanentlyInhibitedValues.Contains(value);
+            return matchesBaseInhibition || matchesExtraInhibition || matchesPermanentInhibition;
         }
 
         /// <summary>Merges a Static result with a Frequency result into one total.</summary>
@@ -69,6 +95,10 @@ namespace Rollrate.Combat
                 AddedDiceCopyCoreType = baseResult.AddedDiceCopyCoreType || bonusResult.AddedDiceCopyCoreType,
                 NextShopDiscountPercent = Mathf.Max(baseResult.NextShopDiscountPercent, bonusResult.NextShopDiscountPercent),
                 NextTurnPowerBonus = baseResult.NextTurnPowerBonus + bonusResult.NextTurnPowerBonus,
+                // Frequency's target value (if it sets one) takes priority over Static's -
+                // for Mirror/Shift/Reverse, Frequency represents an upgraded version of
+                // the same single action, not a stacking bonus.
+                NewTargetValue = bonusResult.NewTargetValue ?? baseResult.NewTargetValue,
                 DebugLog = baseResult.DebugLog + " | " + bonusResult.DebugLog
             };
         }

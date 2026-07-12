@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Rollrate.Combat
 {
@@ -14,6 +15,8 @@ namespace Rollrate.Combat
         public bool CoreIsEven;
 
         public int InhibitedValue; // X rolled by the enemy's Inhibitor Die
+        public int ExtraInhibitedValue = -1; // Sentinel: a second conditionally-inhibited value (-1 = none)
+        public HashSet<int> PermanentlyInhibitedValues; // Judge: a growing set of values inhibited for the whole fight (null/empty = none)
 
         public int PlayerHp;
         public int PlayerHpMax;
@@ -33,7 +36,16 @@ namespace Rollrate.Combat
 
         public bool FullResonanceActive;
 
+        [Tooltip("Used by enemy abilities like Compiler's Lockdown, which reacts to a die being placed in Flow.")]
+        public bool FlowSlotOccupied;
+
         public int ScrapGainedThisTurn;
+
+        // --- Target-die info for Mirror/Shift/Reverse (Flow Slot) ---
+        [Tooltip("The current value of the die the player chose as a target for Mirror/Shift/Reverse. Null if no target was chosen or needed.")]
+        public int? TargetDieValue;
+        [Tooltip("The number of faces on the targeted die - needed by Shift (clamping) and Reverse (flip formula).")]
+        public int TargetDieFaces;
     }
 
     /// <summary>
@@ -64,6 +76,9 @@ namespace Rollrate.Combat
         public bool AddedDiceCopyCoreType;        // Reinforcements (Even): copies Core Die type instead of D4
         public float NextShopDiscountPercent;      // Scrap (Odd): discount on next purchase
         public int NextTurnPowerBonus;             // Overload: flat bonus to next turn's first Power die
+
+        public int? NewTargetValue;   // Mirror/Shift/Reverse: the new value to apply to the chosen target die
+        public bool FrequencyTriggered; // set by ModuleResolver when the Frequency Effect actually fired this turn
 
         public string DebugLog;
     }

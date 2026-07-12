@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca75a3eae762184bab4ef5f3ed1413d, type: 3}
+  m_Name: Warden
+  m_EditorClassIdentifier: 
+  displayName: Warden
+  flavorText: Elite stasis unit
+  maxHp: 34
+  baseThreshold: 24
+  inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  abilityId: 10
+  abilityDescription: 1 direct HP damage per Flow reroll used
+  icon: {fileID: 0}

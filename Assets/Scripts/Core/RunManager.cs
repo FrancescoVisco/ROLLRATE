@@ -42,10 +42,11 @@ namespace Rollrate.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-        }
 
-        private void Start()
-        {
+            // Populated here (not in Start()) so that GameState is guaranteed
+            // ready before ANY other script's Start() runs - Unity completes
+            // all Awake() calls before calling any Start(), regardless of
+            // execution order between different scripts.
             StartNewRun();
         }
 

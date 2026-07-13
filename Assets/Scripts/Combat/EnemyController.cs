@@ -16,6 +16,14 @@ namespace Rollrate.Combat
     /// </summary>
     public class EnemyController : MonoBehaviour
     {
+        /// <summary>
+        /// Set to false by the Balance Simulator before running thousands of
+        /// fights, to avoid the significant overhead of millions of Debug.Log
+        /// calls (string formatting + console writes) slowing the run down.
+        /// Always true during normal gameplay.
+        /// </summary>
+        public static bool VerboseLogging = true;
+
         [Header("Enemy Data")]
         [SerializeField] private EnemyData enemyData;
 
@@ -48,7 +56,7 @@ namespace Rollrate.Combat
             _prismTargetSlot = null;
             _permanentlyInhibitedValues.Clear();
             PersistentDestroyValue = -1;
-            Debug.Log($"[EnemyController] Fight started against {enemyData?.displayName}, HP: {CurrentHp}");
+            if (VerboseLogging) Debug.Log($"[EnemyController] Fight started against {enemyData?.displayName}, HP: {CurrentHp}");
         }
 
         /// <summary>
@@ -70,7 +78,7 @@ namespace Rollrate.Combat
             }
 
             LastInhibitedValue = Random.Range(1, enemyData.inhibitorDie.faces + 1);
-            Debug.Log($"[EnemyController] Inhibitor rolled: {LastInhibitedValue} (dice showing this value are inhibited this turn)");
+            if (VerboseLogging) Debug.Log($"[EnemyController] Inhibitor rolled: {LastInhibitedValue} (dice showing this value are inhibited this turn)");
         }
 
         /// <summary>Computes this turn's effective Threshold: base + permanent bonus + this ability's modifier.</summary>
@@ -107,6 +115,17 @@ namespace Rollrate.Combat
             EnemyAbilityRegistry.Get(enemyData.abilityId).OnTurnEnd(this, abilityCtx);
         }
 
+        /// <summary>
+        /// Notifies this enemy's ability that Second Chance's reroll was
+        /// actually used this turn. Returns any extra direct HP damage the
+        /// ability inflicts as a reaction (e.g. Warden's Stasis).
+        /// </summary>
+        public int NotifyFlowRerollUsed(EnemyAbilityContext abilityCtx)
+        {
+            if (enemyData == null) return 0;
+            return EnemyAbilityRegistry.Get(enemyData.abilityId).OnFlowRerollUsed(abilityCtx);
+        }
+
         /// <summary>Returns a copy of the permanently inhibited values (Judge).</summary>
         public HashSet<int> GetPermanentlyInhibitedValues() => new HashSet<int>(_permanentlyInhibitedValues);
 
@@ -121,11 +140,11 @@ namespace Rollrate.Combat
         public void ApplyDamage(int amount)
         {
             CurrentHp = Mathf.Max(0, CurrentHp - amount);
-            Debug.Log($"[EnemyController] Took {amount} damage, HP now {CurrentHp}/{MaxHp}");
+            if (VerboseLogging) Debug.Log($"[EnemyController] Took {amount} damage, HP now {CurrentHp}/{MaxHp}");
 
             if (IsDefeated)
             {
-                Debug.Log($"[EnemyController] {enemyData?.displayName} defeated!");
+                if (VerboseLogging) Debug.Log($"[EnemyController] {enemyData?.displayName} defeated!");
             }
         }
     }

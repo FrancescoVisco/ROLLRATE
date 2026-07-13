@@ -38,6 +38,10 @@ namespace Rollrate.UI
         [SerializeField] private int debugThreshold = 10;
         [SerializeField] private int debugInhibitedValue = 0;
 
+        [Header("Changeover Rule")]
+        [Tooltip("The die type added to the pool when Changeover's Charges reach 10. Design says '10 Charges = +1 Die' without specifying the type - defaulting to D4 as the simplest rule.")]
+        [SerializeField] private DieData changeoverRewardDie;
+
         [Header("Optional HUD")]
         [SerializeField] private GameHUD gameHUD;
 
@@ -257,13 +261,17 @@ namespace Rollrate.UI
 
             // --- Resolve Flow's static/frequency manipulation FIRST (Mirror/Shift/Reverse),
             //     since it can change values that Power/Stability/Echo then need to use ---
-            ModuleResult flowPrePassResult = default;
+            ModuleResult flowResult = default;
             bool flowIsManipulator = ModuleNeedsTarget(flowModuleCheck);
-            if (flowIsManipulator && placedValues.ContainsKey(SlotType.Flow))
+            if (placedValues.ContainsKey(SlotType.Flow))
             {
                 bool flowSelfIgnoresInhibition = false; // Legame/Resonance status isn't known yet at this point - acceptable simplification
-                flowPrePassResult = ModuleResolver.ResolveSlot(flowModuleCheck, placedValues[SlotType.Flow], ctx, flowSelfIgnoresInhibition, forceFrequency: false);
-                ApplyFlowTargetEffect(flowModuleCheck, flowPrePassResult, placedValues, placedDieTypes);
+                flowResult = ModuleResolver.ResolveSlot(flowModuleCheck, placedValues[SlotType.Flow], ctx, flowSelfIgnoresInhibition, forceFrequency: false);
+
+                if (flowIsManipulator)
+                {
+                    ApplyFlowTargetEffect(flowModuleCheck, flowResult, placedValues, placedDieTypes);
+                }
             }
 
             // --- Enemy ability die-value modifiers (Architect/Prism/Null-Pointer) ---
@@ -278,6 +286,44 @@ namespace Rollrate.UI
                     {
                         placedValues[slot] = modified;
                         Debug.Log($"[CombatController] Enemy ability modified {slot} die to {modified}");
+                    }
+                }
+            }
+
+            // --- Second Chance reroll heuristic ---
+            // No interactive "pick a die to reroll" UI exists yet, so this
+            // automatically rerolls the LOWEST-value unplaced hand dice
+            // first (the most sensible default choice for an automated
+            // heuristic: improve your worst options). Frequency (High DCD)
+            // rerolls up to 3 dice and keeps the better of old/new per die.
+            if (flowResult.DiceToReroll > 0 && diceRoller != null)
+            {
+                var handDice = diceRoller.GetUnplacedHandDice();
+                handDice.Sort((a, b) => a.rolledValue.CompareTo(b.rolledValue));
+
+                int rerolled = 0;
+                for (int i = 0; i < handDice.Count && rerolled < flowResult.DiceToReroll; i++)
+                {
+                    DraggableDie die = handDice[i];
+                    if (die.dieType == null) continue;
+
+                    int oldValue = die.rolledValue;
+                    int newValue = Random.Range(1, die.dieType.faces + 1);
+                    int finalValue = flowResult.RerollKeepsBetterResult ? Mathf.Max(oldValue, newValue) : newValue;
+
+                    bool nowInhibited = ModuleResolver.IsValueInhibited(finalValue, ctx);
+                    die.Setup(die.dieType, finalValue, locked: false, inhibited: nowInhibited);
+                    Debug.Log($"[CombatController] Second Chance reroll: {oldValue} -> {finalValue}");
+                    rerolled++;
+                }
+
+                if (rerolled > 0 && enemyController != null)
+                {
+                    int wardenDamage = enemyController.NotifyFlowRerollUsed(abilityCtx);
+                    if (wardenDamage > 0)
+                    {
+                        state.currentHp = Mathf.Max(0, state.currentHp - wardenDamage);
+                        Debug.Log($"[CombatController] Warden Stasis: reroll used, -{wardenDamage} HP direct (HP now {state.currentHp}/{state.maxHp})");
                     }
                 }
             }
@@ -335,7 +381,7 @@ namespace Rollrate.UI
 
             ApplyResultToState(state, powerResult, fullResonance);
             ApplyResultToState(state, stabilityResult, fullResonance);
-            ApplyResultToState(state, flowPrePassResult, fullResonance);
+            ApplyResultToState(state, flowResult, fullResonance);
             ApplyResultToState(state, echoResult, fullResonance);
 
             if (success && stabilityResult.NextThresholdReductionPercent > 0f)
@@ -502,7 +548,15 @@ namespace Rollrate.UI
                 while (state.changeoverCharges >= 10)
                 {
                     state.changeoverCharges -= 10;
-                    Debug.Log("[CombatController] Changeover: 10 Charges reached - TODO add a real +1 Die to the pool (needs a die-choice UI or a default rule)");
+                    if (changeoverRewardDie != null)
+                    {
+                        state.dicePool.Add(changeoverRewardDie);
+                        Debug.Log($"[CombatController] Changeover: 10 Charges reached - added a {changeoverRewardDie.displayName} to the pool.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[CombatController] Changeover: 10 Charges reached, but no Changeover Reward Die is assigned on CombatController - nothing added.");
+                    }
                 }
             }
 

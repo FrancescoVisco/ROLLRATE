@@ -41,5 +41,12 @@ namespace Rollrate.Combat
         /// doesn't affect that slot/die.
         /// </summary>
         public virtual int ModifyPlacedDieValue(SlotType slot, int rawValue, DieData dieType, EnemyAbilityContext ctx) => rawValue;
+
+        /// <summary>
+        /// Extra direct HP damage to the player each time Second Chance's
+        /// reroll is actually used this turn (e.g. Warden). Called once per
+        /// turn a reroll happened (not once per die rerolled).
+        /// </summary>
+        public virtual int OnFlowRerollUsed(EnemyAbilityContext ctx) => 0;
     }
 }

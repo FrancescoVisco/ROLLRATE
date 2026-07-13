@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dca75a3eae762184bab4ef5f3ed1413d, type: 3}
   m_Name: Architect
   m_EditorClassIdentifier: 
-  displayName: Cantor
+  displayName: Architect
   flavorText: Elite feedback unit
   maxHp: 26
   baseThreshold: 20

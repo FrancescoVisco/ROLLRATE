@@ -6,9 +6,7 @@ namespace Rollrate.Combat
 {
     /// <summary>
     /// Single place where every enemy ability's logic gets registered.
-    /// Only Warden remains functionally a no-op (its trigger condition -
-    /// an interactive Flow reroll - doesn't exist in the game yet); every
-    /// other enemy has real ability logic.
+    /// All 15 enemies have real, functional ability logic.
     /// </summary>
     public static class EnemyAbilityRegistry
     {
@@ -31,7 +29,7 @@ namespace Rollrate.Combat
 
             // Grade IV
             { EnemyAbilityId.Inquisitor, new InquisitorAbility() },
-            { EnemyAbilityId.Warden, new WardenAbility() }, // functionally no-op, see WardenAbility.cs
+            { EnemyAbilityId.Warden, new WardenAbility() },
             { EnemyAbilityId.Judge, new JudgeAbility() },
 
             // Grade V

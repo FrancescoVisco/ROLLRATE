@@ -36,6 +36,24 @@ namespace Rollrate.UI
         [SerializeField] private float fixedY = 0f;
 
         private readonly List<DraggableDie> _currentHand = new List<DraggableDie>();
+
+        /// <summary>
+        /// Returns the pool dice currently sitting unplaced in the hand
+        /// (not dragged into any slot). Used by Second Chance's reroll
+        /// heuristic, which needs a die to reroll automatically.
+        /// </summary>
+        public List<DraggableDie> GetUnplacedHandDice()
+        {
+            var result = new List<DraggableDie>();
+            foreach (var die in _currentHand)
+            {
+                if (die != null && die.transform.parent == handContainer)
+                {
+                    result.Add(die);
+                }
+            }
+            return result;
+        }
         private DraggableDie _currentCoreInstance;
         private DraggableDie _currentEnemyDieInstance;
 

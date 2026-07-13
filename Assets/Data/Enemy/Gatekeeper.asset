@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dca75a3eae762184bab4ef5f3ed1413d, type: 3}
   m_Name: Gatekeeper
   m_EditorClassIdentifier: 
-  displayName: Fragment
+  displayName: Gatekeeper
   flavorText: Worker fragments, rigid and colorless
   maxHp: 20
   baseThreshold: 14

@@ -484,8 +484,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -120, y: 110}
-  m_SizeDelta: {x: 500, y: 50}
+  m_AnchoredPosition: {x: -59.075, y: 110}
+  m_SizeDelta: {x: 621.849, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &354044217
 MonoBehaviour:
@@ -652,12 +652,16 @@ MonoBehaviour:
   startingHp: 10
   handSize: 6
   debugStartingPool:
-  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
-  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
-  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
-  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
+  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
+  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
+  - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
+  - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
+  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
+  - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  - {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
   debugPowerModule: {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
-  debugStabilityModule: {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+  debugStabilityModule: {fileID: 11400000, guid: e8e0b82f96ab0af4fb02df1ee3c7797b, type: 2}
   debugFlowModule: {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
   debugEchoModule: {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
 --- !u!4 &444727675
@@ -1038,13 +1042,14 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 354044216}
+  - {fileID: 835703015}
   m_Father: {fileID: 1983060061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -525, y: -337.5}
-  m_SizeDelta: {x: -1150, y: -775}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -140, y: -183.99994}
+  m_SizeDelta: {x: 770, y: 307}
+  m_Pivot: {x: 1, y: 1}
 --- !u!114 &718897220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1095,6 +1100,140 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00886ccddebeeb54b8bab47d0c18e018, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &835703014
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 835703015}
+  - component: {fileID: 835703017}
+  - component: {fileID: 835703016}
+  m_Layer: 5
+  m_Name: BonusDice
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &835703015
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835703014}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 718897219}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 2.0150146, y: 110}
+  m_SizeDelta: {x: 744.028, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &835703016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835703014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: BonusDice
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 35
+  m_fontSizeBase: 35
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 4
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_enableWordWrapping: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 1
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &835703017
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835703014}
+  m_CullTransparentMesh: 1
 --- !u!1 &844998485
 GameObject:
   m_ObjectHideFlags: 0
@@ -1670,7 +1809,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 594dc6f74c05c1e4ebc825193088041a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyData: {fileID: 11400000, guid: 4c89b3365cafda749943be49a96123a8, type: 2}
+  enemyData: {fileID: 11400000, guid: ed2b0517e6a7c4b41bc0e38bd69e3d52, type: 2}
 --- !u!4 &1205429606
 Transform:
   m_ObjectHideFlags: 0
@@ -2078,10 +2217,11 @@ MonoBehaviour:
   diePrefab: {fileID: 4714056081994268044, guid: cd7428d551dd0814c875a338951b1a70, type: 3}
   handContainer: {fileID: 718897219}
   coreDisplaySlot: {fileID: 1683249652}
-  enemyDieDisplaySlot: {fileID: 0}
+  enemyDieDisplaySlot: {fileID: 1209374373}
   enemyController: {fileID: 1205429605}
   combatController: {fileID: 2025726613}
   gameHUD: {fileID: 2092926960}
+  rollButton: {fileID: 1283890140}
   coreDieColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   enemyDieColor: {r: 0.75, g: 0.2, b: 0.3, a: 1}
   spacingX: 100
@@ -3728,9 +3868,9 @@ MonoBehaviour:
   stabilitySlot: {fileID: 1300653196}
   flowSlot: {fileID: 889568375}
   echoSlot: {fileID: 1751781616}
+  resolveButton: {fileID: 2003033778}
   debugThreshold: 10
   debugInhibitedValue: 0
-  changeoverRewardDie: {fileID: 0}
   gameHUD: {fileID: 2092926960}
 --- !u!4 &2025726614
 Transform:
@@ -3794,10 +3934,11 @@ MonoBehaviour:
   enemyController: {fileID: 1205429605}
   combatController: {fileID: 2025726613}
   playerHpText: {fileID: 1980027543}
-  enemyNameText: {fileID: 0}
+  enemyNameText: {fileID: 1377750092}
   enemyHpText: {fileID: 906854464}
   thresholdText: {fileID: 980239975}
   dicePoolCountText: {fileID: 354044217}
+  bonusDiceText: {fileID: 0}
   statusMessageText: {fileID: 60427089}
 --- !u!1 &2122177892
 GameObject:

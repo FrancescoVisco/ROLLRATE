@@ -39,10 +39,6 @@ namespace Rollrate.UI
         [SerializeField] private int debugThreshold = 10;
         [SerializeField] private int debugInhibitedValue = 0;
 
-        [Header("Changeover Rule")]
-        [Tooltip("The die type added to the pool when Changeover's Charges reach 10. Design says '10 Charges = +1 Die' without specifying the type - defaulting to D4 as the simplest rule.")]
-        [SerializeField] private DieData changeoverRewardDie;
-
         [Header("Optional HUD")]
         [SerializeField] private GameHUD gameHUD;
 
@@ -555,14 +551,10 @@ namespace Rollrate.UI
                 while (state.changeoverCharges >= 10)
                 {
                     state.changeoverCharges -= 10;
-                    if (changeoverRewardDie != null)
+                    if (state.coreDie != null)
                     {
-                        state.dicePool.Add(changeoverRewardDie);
-                        Debug.Log($"[CombatController] Changeover: 10 Charges reached - added a {changeoverRewardDie.displayName} to the pool.");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[CombatController] Changeover: 10 Charges reached, but no Changeover Reward Die is assigned on CombatController - nothing added.");
+                        state.pendingChangeoverBonusDice.Add(state.coreDie);
+                        Debug.Log($"[CombatController] Changeover: 10 Charges reached - a bonus {state.coreDie.displayName} (copy of the Core Die) will be rolled on the NEXT turn only, then removed from the game.");
                     }
                 }
             }

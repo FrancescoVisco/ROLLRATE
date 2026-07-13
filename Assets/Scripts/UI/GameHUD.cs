@@ -25,6 +25,7 @@ namespace Rollrate.UI
         [SerializeField] private TextMeshProUGUI enemyHpText;
         [SerializeField] private TextMeshProUGUI thresholdText;
         [SerializeField] private TextMeshProUGUI dicePoolCountText;
+        [SerializeField] private TextMeshProUGUI bonusDiceText; // Changeover: shows "+N Bonus" while a bonus die is queued for the next Roll
         [SerializeField] private TextMeshProUGUI statusMessageText;
 
         private void Start()
@@ -70,6 +71,12 @@ namespace Rollrate.UI
             if (dicePoolCountText != null)
             {
                 dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count} (Draw: {state.drawPile.Count} / Discard: {state.discardPile.Count})";
+            }
+
+            if (bonusDiceText != null)
+            {
+                int pendingCount = state.pendingChangeoverBonusDice.Count;
+                bonusDiceText.text = pendingCount > 0 ? $"+{pendingCount} Bonus" : string.Empty;
             }
         }
 

@@ -49,6 +49,8 @@ namespace Rollrate.Core
         [Header("Deferred Turn Effects (reset on Fragmentation)")]
         [Tooltip("Changeover: 10 Charges = +1 Die added to the pool.")]
         public int changeoverCharges;
+        [Tooltip("Changeover: dice queued here are rolled for exactly ONE turn (the next Roll), then removed from the game entirely - never added to the pool/deck, never discarded.")]
+        public List<DieData> pendingChangeoverBonusDice = new List<DieData>();
         [Tooltip("Overload: flat bonus applied to the first Power die placed next turn.")]
         public int pendingNextTurnPowerBonus;
         [Tooltip("Aiming: % reduction applied to the enemy Threshold next turn (0 = none).")]
@@ -74,6 +76,7 @@ namespace Rollrate.Core
             installedModules.Clear();
             ownedModules.Clear();
             changeoverCharges = 0;
+            pendingChangeoverBonusDice.Clear();
             pendingNextTurnPowerBonus = 0;
             pendingThresholdReductionPercent = 0f;
             pendingShopDiscountPercent = 0f;
@@ -96,6 +99,7 @@ namespace Rollrate.Core
             installedModules.Clear();
             ownedModules.Clear();
             changeoverCharges = 0;
+            pendingChangeoverBonusDice.Clear();
             pendingNextTurnPowerBonus = 0;
             pendingThresholdReductionPercent = 0f;
             pendingShopDiscountPercent = 0f;

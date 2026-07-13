@@ -155,6 +155,26 @@ namespace Rollrate.UI
 
             _currentHandDice = toDiscard; // only the survivors get discarded at turn end
 
+            // Changeover's bonus dice: rolled for exactly this one turn,
+            // then consumed from the queue - deliberately kept OUT of
+            // _currentHandDice, so DiscardCurrentHand() never sends them to
+            // the Discard Pile. They simply cease to exist once this hand's
+            // visuals are cleared at the next Roll (removed from the game,
+            // not discarded - they were never part of the deck to begin with).
+            if (state.pendingChangeoverBonusDice.Count > 0)
+            {
+                foreach (DieData bonusDie in state.pendingChangeoverBonusDice)
+                {
+                    if (bonusDie == null) continue;
+                    int rolled = Random.Range(1, bonusDie.faces + 1);
+                    bool inhibited = enemyController != null && enemyController.LastInhibitedValue == rolled;
+                    SpawnPoolDie(bonusDie, rolled, spawnIndex, inhibited);
+                    spawnIndex++;
+                }
+                Debug.Log($"[DiceRoller] Changeover bonus: rolled {state.pendingChangeoverBonusDice.Count} bonus die(s) for this turn only.");
+                state.pendingChangeoverBonusDice.Clear(); // consumed - one-time use
+            }
+
             // Notify dependent systems: turn gating resets, slot labels and
             // HUD (HP) refresh to reflect this new turn.
             combatController?.NotifyDiceRolled();

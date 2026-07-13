@@ -42,6 +42,12 @@ namespace Rollrate.Shop
         [Header("Offer Settings")]
         [Tooltip("Up to this many offers appear at once, in a random Module/Die mix each time offers are (re)generated.")]
         [SerializeField] private int maxOffers = 6;
+        [Tooltip("When both dice and modules are available, each type gets at least this many of the offer slots (e.g. 2 with Max Offers 6 = a 2-4 or 3-3 or 4-2 split, never all-one-type).")]
+        [SerializeField] private int minOffersPerType = 2;
+        [Tooltip("Relative weight for modules NOT yet owned - higher means they show up far more often than owned ones.")]
+        [SerializeField] private int unownedModuleWeight = 5;
+        [Tooltip("Relative weight for modules already owned - low but non-zero, so they can still occasionally appear instead of being fully excluded.")]
+        [SerializeField] private int ownedModuleWeight = 1;
         [SerializeField] private int maxHpIncreasePerPurchase = 1;
 
         /// <summary>The current offer board. Fires whenever it changes (purchase, reroll, initial generation).</summary>
@@ -218,13 +224,17 @@ namespace Rollrate.Shop
             ModuleData[] allGradeModules = gradePool.modules ?? new ModuleData[0];
             DieData[] availableDice = gradePool.dice ?? new DieData[0];
 
-            // Prefer modules not yet owned, so the board doesn't repeat what
-            // you already have. If every module in this Grade is already
-            // owned, fall back to the full list (ShopOfferRowUI still shows
-            // "Already Owned" and blocks the click) rather than showing fewer
-            // than the requested offer count.
-            ModuleData[] unownedModules = allGradeModules.Where(m => !state.OwnsModule(m)).ToArray();
-            ModuleData[] availableModules = unownedModules.Length > 0 ? unownedModules : allGradeModules;
+            // Weighted pool instead of a hard exclusion: modules you don't
+            // own yet are far more likely to appear, but an already-owned
+            // one can still show up occasionally (small chance) instead of
+            // being completely filtered out.
+            var weightedModules = new List<ModuleData>();
+            foreach (ModuleData m in allGradeModules)
+            {
+                int weight = state.OwnsModule(m) ? ownedModuleWeight : unownedModuleWeight;
+                for (int i = 0; i < weight; i++) weightedModules.Add(m);
+            }
+            ModuleData[] availableModules = weightedModules.ToArray();
 
             int moduleCount;
             int dieCount;
@@ -246,11 +256,16 @@ namespace Rollrate.Shop
             }
             else
             {
-                moduleCount = Random.Range(0, maxOffers + 1);
+                // Force a real mix: never all-dice or all-modules when both
+                // types are actually available - each type gets between
+                // minOffersPerType and (maxOffers - minOffersPerType) slots.
+                int minCount = Mathf.Clamp(minOffersPerType, 0, maxOffers / 2);
+                int maxCount = maxOffers - minCount;
+                moduleCount = Random.Range(minCount, maxCount + 1);
                 dieCount = maxOffers - moduleCount;
             }
 
-            var modules = PickRandom(availableModules, moduleCount);
+            var modules = PickRandomWeightedModules(weightedModules, moduleCount);
             var dice = PickRandom(availableDice, dieCount);
 
             var offers = new List<ShopOffer>();
@@ -259,6 +274,29 @@ namespace Rollrate.Shop
 
             CurrentOffers = offers.OrderBy(_ => Random.value).ToList();
             OnOffersChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Picks up to `count` DISTINCT modules from a weighted candidate
+        /// list (which may contain the same module multiple times, to bias
+        /// probability toward unowned ones - see GenerateOffers). Every copy
+        /// of a picked module is removed after selection, so the same
+        /// module can't appear twice on the same offer board.
+        /// </summary>
+        private List<ModuleData> PickRandomWeightedModules(List<ModuleData> weightedPool, int count)
+        {
+            var result = new List<ModuleData>();
+            if (weightedPool == null || weightedPool.Count == 0 || count <= 0) return result;
+
+            var poolCopy = new List<ModuleData>(weightedPool);
+            for (int i = 0; i < count && poolCopy.Count > 0; i++)
+            {
+                int index = Random.Range(0, poolCopy.Count);
+                ModuleData picked = poolCopy[index];
+                result.Add(picked);
+                poolCopy.RemoveAll(m => m == picked); // remove every weighted copy - no repeats on this board
+            }
+            return result;
         }
 
         private List<T> PickRandom<T>(T[] pool, int count) where T : Object

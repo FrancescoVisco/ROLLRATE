@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1de4807ec6370c3418121c1f6e0753a4, type: 3}
+  m_Name: ShopOfferPools
+  m_EditorClassIdentifier: 
+  gradeI:
+    dice:
+    - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    - {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
+    modules:
+    - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+    - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+    - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+    - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+  gradeII:
+    dice:
+    - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
+    - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
+    modules:
+    - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+    - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+    - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+    - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+    - {fileID: 11400000, guid: 9c2646a23bfb1dc4d9524616aab080cd, type: 2}
+    - {fileID: 11400000, guid: 349657b8350b8b14497fdc0efcaba698, type: 2}
+    - {fileID: 11400000, guid: c87f0640b7bc20743bd1378f088eb613, type: 2}
+    - {fileID: 11400000, guid: 07f3c311109770f42b4066f44b7a8cc6, type: 2}
+  gradeIII:
+    dice:
+    - {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
+    modules:
+    - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+    - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+    - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+    - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+    - {fileID: 11400000, guid: 9c2646a23bfb1dc4d9524616aab080cd, type: 2}
+    - {fileID: 11400000, guid: 349657b8350b8b14497fdc0efcaba698, type: 2}
+    - {fileID: 11400000, guid: c87f0640b7bc20743bd1378f088eb613, type: 2}
+    - {fileID: 11400000, guid: 07f3c311109770f42b4066f44b7a8cc6, type: 2}
+    - {fileID: 11400000, guid: 5fdbf03cccd45474f9f9c3d055db86b1, type: 2}
+    - {fileID: 11400000, guid: e8e0b82f96ab0af4fb02df1ee3c7797b, type: 2}
+    - {fileID: 11400000, guid: 198a2fb2c5fd6e643abc7b944467fdf9, type: 2}
+    - {fileID: 11400000, guid: 34bda027a38e8834ea30aabea609da09, type: 2}
+  gradeIV:
+    dice:
+    - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
+    - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
+    modules:
+    - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+    - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+    - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+    - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+    - {fileID: 11400000, guid: 9c2646a23bfb1dc4d9524616aab080cd, type: 2}
+    - {fileID: 11400000, guid: 349657b8350b8b14497fdc0efcaba698, type: 2}
+    - {fileID: 11400000, guid: c87f0640b7bc20743bd1378f088eb613, type: 2}
+    - {fileID: 11400000, guid: 07f3c311109770f42b4066f44b7a8cc6, type: 2}
+    - {fileID: 11400000, guid: 5fdbf03cccd45474f9f9c3d055db86b1, type: 2}
+    - {fileID: 11400000, guid: e8e0b82f96ab0af4fb02df1ee3c7797b, type: 2}
+    - {fileID: 11400000, guid: 198a2fb2c5fd6e643abc7b944467fdf9, type: 2}
+    - {fileID: 11400000, guid: 34bda027a38e8834ea30aabea609da09, type: 2}
+    - {fileID: 11400000, guid: 6205265d3a72d99418f6316882ffa477, type: 2}
+    - {fileID: 11400000, guid: 895130c243a8840499949e466d2d360a, type: 2}
+    - {fileID: 11400000, guid: 2d0b6739f903bbb4983696d6abbf9add, type: 2}
+    - {fileID: 11400000, guid: 18da4b25993770c4988a98bf40ab5e18, type: 2}
+  gradeV:
+    dice:
+    - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+    modules:
+    - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+    - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+    - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+    - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+    - {fileID: 11400000, guid: 9c2646a23bfb1dc4d9524616aab080cd, type: 2}
+    - {fileID: 11400000, guid: 349657b8350b8b14497fdc0efcaba698, type: 2}
+    - {fileID: 11400000, guid: c87f0640b7bc20743bd1378f088eb613, type: 2}
+    - {fileID: 11400000, guid: 07f3c311109770f42b4066f44b7a8cc6, type: 2}
+    - {fileID: 11400000, guid: 5fdbf03cccd45474f9f9c3d055db86b1, type: 2}
+    - {fileID: 11400000, guid: e8e0b82f96ab0af4fb02df1ee3c7797b, type: 2}
+    - {fileID: 11400000, guid: 198a2fb2c5fd6e643abc7b944467fdf9, type: 2}
+    - {fileID: 11400000, guid: 34bda027a38e8834ea30aabea609da09, type: 2}
+    - {fileID: 11400000, guid: 6205265d3a72d99418f6316882ffa477, type: 2}
+    - {fileID: 11400000, guid: 895130c243a8840499949e466d2d360a, type: 2}
+    - {fileID: 11400000, guid: 2d0b6739f903bbb4983696d6abbf9add, type: 2}
+    - {fileID: 11400000, guid: 18da4b25993770c4988a98bf40ab5e18, type: 2}

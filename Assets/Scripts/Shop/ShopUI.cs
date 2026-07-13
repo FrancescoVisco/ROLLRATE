@@ -106,9 +106,9 @@ namespace Rollrate.Shop
 
         private void RefreshActionCosts()
         {
-            if (repairCostText != null) repairCostText.text = $"Repair 1 HP - {shopController.GetRepairHpCost(1)} Scrap";
-            if (increaseMaxHpCostText != null) increaseMaxHpCostText.text = $"+Max HP - {shopController.GetIncreaseMaxHpCost()} Scrap";
-            if (rerollCostText != null) rerollCostText.text = $"Reroll - {shopController.GetRerollCost()} Scrap";
+            if (repairCostText != null) repairCostText.text = $"{shopController.GetRepairHpCost(1)} Scrap";
+            if (increaseMaxHpCostText != null) increaseMaxHpCostText.text = $"{shopController.GetIncreaseMaxHpCost()} Scrap";
+            if (rerollCostText != null) rerollCostText.text = $"{shopController.GetRerollCost()} Scrap";
         }
 
         private void OnRepairClicked()

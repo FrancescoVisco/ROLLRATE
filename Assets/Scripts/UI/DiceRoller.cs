@@ -127,7 +127,12 @@ namespace Rollrate.UI
             // since it no longer exists.
             _currentHandDice = state.DrawHand(RunManager.Instance != null ? RunManager.Instance.HandSize : fallbackHandSize);
             var toDiscard = new List<DieData>();
-            int spawnIndex = 0;
+
+            // Roll everything first (hand + Changeover bonus dice) so we
+            // know the FINAL visible count before positioning - this keeps
+            // the row centered regardless of how many bonus dice are added
+            // this turn, instead of always starting from a fixed X.
+            var toSpawn = new List<(DieData die, int rolled, bool inhibited)>();
 
             foreach (DieData die in _currentHandDice)
             {
@@ -147,10 +152,8 @@ namespace Rollrate.UI
                 }
 
                 toDiscard.Add(die);
-
                 bool inhibited = enemyController != null && enemyController.LastInhibitedValue == rolled;
-                SpawnPoolDie(die, rolled, spawnIndex, inhibited);
-                spawnIndex++;
+                toSpawn.Add((die, rolled, inhibited));
             }
 
             _currentHandDice = toDiscard; // only the survivors get discarded at turn end
@@ -161,18 +164,28 @@ namespace Rollrate.UI
             // the Discard Pile. They simply cease to exist once this hand's
             // visuals are cleared at the next Roll (removed from the game,
             // not discarded - they were never part of the deck to begin with).
-            if (state.pendingChangeoverBonusDice.Count > 0)
+            int bonusCount = state.pendingChangeoverBonusDice.Count;
+            if (bonusCount > 0)
             {
                 foreach (DieData bonusDie in state.pendingChangeoverBonusDice)
                 {
                     if (bonusDie == null) continue;
                     int rolled = Random.Range(1, bonusDie.faces + 1);
                     bool inhibited = enemyController != null && enemyController.LastInhibitedValue == rolled;
-                    SpawnPoolDie(bonusDie, rolled, spawnIndex, inhibited);
-                    spawnIndex++;
+                    toSpawn.Add((bonusDie, rolled, inhibited));
                 }
-                Debug.Log($"[DiceRoller] Changeover bonus: rolled {state.pendingChangeoverBonusDice.Count} bonus die(s) for this turn only.");
+                Debug.Log($"[DiceRoller] Changeover bonus: rolled {bonusCount} bonus die(s) for this turn only.");
                 state.pendingChangeoverBonusDice.Clear(); // consumed - one-time use
+            }
+
+            // Centered row: total width = (count-1) * spacing, so the first
+            // die starts at -halfWidth instead of a fixed startX that only
+            // looked centered for exactly the "normal" hand size.
+            float rowStartX = -((toSpawn.Count - 1) * spacingX) / 2f;
+            for (int i = 0; i < toSpawn.Count; i++)
+            {
+                var (die, rolled, inhibited) = toSpawn[i];
+                SpawnPoolDie(die, rolled, i, inhibited, rowStartX);
             }
 
             // Notify dependent systems: turn gating resets, slot labels and
@@ -229,14 +242,15 @@ namespace Rollrate.UI
             _currentEnemyDieInstance = draggable;
         }
 
-        private void SpawnPoolDie(DieData die, int rolledValue, int index, bool inhibited = false)
+        private void SpawnPoolDie(DieData die, int rolledValue, int index, bool inhibited = false, float? overrideStartX = null)
         {
             GameObject instance = Instantiate(diePrefab, handContainer);
             var draggable = instance.GetComponent<DraggableDie>();
             draggable.Setup(die, rolledValue, locked: false, inhibited: inhibited);
 
             var rect = instance.GetComponent<RectTransform>();
-            rect.anchoredPosition = new Vector2(startX + index * spacingX, fixedY);
+            float rowStartX = overrideStartX ?? startX;
+            rect.anchoredPosition = new Vector2(rowStartX + index * spacingX, fixedY);
 
             _currentHand.Add(draggable);
         }

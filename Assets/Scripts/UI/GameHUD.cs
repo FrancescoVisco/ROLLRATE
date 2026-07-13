@@ -24,6 +24,7 @@ namespace Rollrate.UI
         [SerializeField] private TextMeshProUGUI enemyNameText;
         [SerializeField] private TextMeshProUGUI enemyHpText;
         [SerializeField] private TextMeshProUGUI thresholdText;
+        [SerializeField] private TextMeshProUGUI dicePoolCountText;
         [SerializeField] private TextMeshProUGUI statusMessageText;
 
         private void Start()
@@ -64,6 +65,11 @@ namespace Rollrate.UI
             if (thresholdText != null && combatController != null)
             {
                 thresholdText.text = $"Threshold: {combatController.PreviewEffectiveThreshold()}";
+            }
+
+            if (dicePoolCountText != null)
+            {
+                dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count} (Draw: {state.drawPile.Count} / Discard: {state.discardPile.Count})";
             }
         }
 

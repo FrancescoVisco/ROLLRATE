@@ -23,6 +23,7 @@ namespace Rollrate.UI
         [SerializeField] private EnemyController enemyController; // rolls its Inhibitor Die alongside the player
         [SerializeField] private CombatController combatController; // notified after rolling, to reset turn gating and refresh slot labels
         [SerializeField] private GameHUD gameHUD; // refreshed after rolling, to show updated HP
+        [SerializeField] private UnityEngine.UI.Button rollButton; // disabled after rolling, re-enabled by CombatController once the turn resolves
 
         [Header("Core Die Visual")]
         [SerializeField] private Color coreDieColor = new Color(1f, 0.85f, 0.2f); // gold-ish, matches the "sfarzo" theme
@@ -35,7 +36,12 @@ namespace Rollrate.UI
         [SerializeField] private float startX = -200f;
         [SerializeField] private float fixedY = 0f;
 
+        [Header("Hand Size")]
+        [Tooltip("Read from RunManager.HandSize at runtime - kept here only as a fallback if RunManager isn't found.")]
+        [SerializeField] private int fallbackHandSize = 6;
+
         private readonly List<DraggableDie> _currentHand = new List<DraggableDie>();
+        private List<DieData> _currentHandDice = new List<DieData>(); // the actual DieData drawn this turn, for discarding at turn end
 
         /// <summary>
         /// Returns the pool dice currently sitting unplaced in the hand
@@ -66,8 +72,27 @@ namespace Rollrate.UI
         /// display slot as locked (non-draggable) pieces; pool dice go into
         /// the hand container as draggable pieces.
         /// </summary>
+        /// <summary>Re-enables the Roll button - called by CombatController once the turn resolves.</summary>
+        public void SetRollButtonInteractable(bool interactable)
+        {
+            if (rollButton != null) rollButton.interactable = interactable;
+        }
+
         public void RollAllDice()
         {
+            // Safety net: if a hand from a previous, unresolved turn is
+            // still tracked (shouldn't happen once the Roll button is
+            // properly disabled mid-turn, but this protects deck/discard
+            // integrity even if RollAllDice() is ever called again early),
+            // discard it first instead of silently losing those dice from
+            // both piles.
+            if (_currentHandDice.Count > 0)
+            {
+                Debug.LogWarning("[DiceRoller] RollAllDice() called again before the previous hand was discarded - discarding it now to avoid losing dice from the deck.");
+                RunManager.Instance.State.DiscardHand(_currentHandDice);
+                _currentHandDice = new List<DieData>();
+            }
+
             ClearHand();
             ClearCore();
             ClearEnemyDie();
@@ -94,15 +119,17 @@ namespace Rollrate.UI
                 }
             }
 
-            // Pool dice - normal draggable dice, freely positioned in a row.
-            // If the enemy (Sovereign) has a locked "destroy value", any
-            // pool die rolling that exact value is permanently removed from
-            // the pool instead of being spawned.
-            var poolSnapshot = new List<DieData>(state.dicePool);
-            state.dicePool.Clear();
+            // Pool dice - draw a fresh hand from the Draw Pile (reshuffling
+            // the Discard Pile in automatically if needed). If the enemy
+            // (Sovereign) has a locked "destroy value", any drawn die
+            // rolling that exact value is permanently removed from the
+            // game instead of being spawned - and isn't discarded either,
+            // since it no longer exists.
+            _currentHandDice = state.DrawHand(RunManager.Instance != null ? RunManager.Instance.HandSize : fallbackHandSize);
+            var toDiscard = new List<DieData>();
             int spawnIndex = 0;
 
-            foreach (DieData die in poolSnapshot)
+            foreach (DieData die in _currentHandDice)
             {
                 if (die == null) continue;
 
@@ -114,21 +141,40 @@ namespace Rollrate.UI
 
                 if (destroyedBySovereign)
                 {
-                    Debug.Log($"[DiceRoller] Sovereign destroyed a {die.displayName} die (rolled {rolled}, matches the locked value). Permanently removed from the pool.");
-                    continue; // not re-added to state.dicePool, not spawned
+                    Debug.Log($"[DiceRoller] Sovereign destroyed a {die.displayName} die (rolled {rolled}, matches the locked value). Permanently removed from the game.");
+                    state.RemoveDiePermanently(die);
+                    continue; // not discarded (it's gone), not spawned
                 }
 
-                state.dicePool.Add(die); // keep it for future turns
+                toDiscard.Add(die);
 
                 bool inhibited = enemyController != null && enemyController.LastInhibitedValue == rolled;
                 SpawnPoolDie(die, rolled, spawnIndex, inhibited);
                 spawnIndex++;
             }
 
+            _currentHandDice = toDiscard; // only the survivors get discarded at turn end
+
             // Notify dependent systems: turn gating resets, slot labels and
             // HUD (HP) refresh to reflect this new turn.
             combatController?.NotifyDiceRolled();
             gameHUD?.RefreshStats();
+
+            // Block re-rolling mid-turn: CombatController re-enables this
+            // once the turn is actually resolved.
+            if (rollButton != null) rollButton.interactable = false;
+        }
+
+        /// <summary>
+        /// Moves this turn's drawn hand into the Discard Pile. Call this
+        /// once the turn has been resolved (CombatController does this at
+        /// the end of ResolveTurn, alongside setting the "needs reroll" gate).
+        /// </summary>
+        public void DiscardCurrentHand()
+        {
+            var state = RunManager.Instance.State;
+            state.DiscardHand(_currentHandDice);
+            _currentHandDice = new List<DieData>();
         }
 
         private void SpawnCore(DieData die, int rolledValue)

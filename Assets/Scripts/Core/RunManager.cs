@@ -20,6 +20,10 @@ namespace Rollrate.Core
         [Header("Starting Values")]
         [SerializeField] private DieData startingCoreDie; // assign the D4 asset here
         [SerializeField] private int startingHp = 10;
+        [Tooltip("How many dice are drawn from the Draw Pile each Roll. If fewer dice are owned in total, draws as many as available.")]
+        [SerializeField] private int handSize = 6;
+
+        public int HandSize => handSize;
 
         [Header("Debug Only - Test Dice Pool")]
         [Tooltip("Dice assigned here are added to the pool at the start of a new run, purely for testing. Remove/empty this once the Shop can add dice for real.")]
@@ -60,17 +64,36 @@ namespace Rollrate.Core
             {
                 foreach (var die in debugStartingPool)
                 {
-                    if (die != null) State.dicePool.Add(die);
+                    if (die != null) State.AddDieToPool(die);
                 }
             }
+            ShuffleDrawPile();
 
             // Debug only: install test modules directly, before the Shop can do it for real.
-            if (debugPowerModule != null) State.installedModules[SlotType.Power] = debugPowerModule;
-            if (debugStabilityModule != null) State.installedModules[SlotType.Stability] = debugStabilityModule;
-            if (debugFlowModule != null) State.installedModules[SlotType.Flow] = debugFlowModule;
-            if (debugEchoModule != null) State.installedModules[SlotType.Echo] = debugEchoModule;
+            InstallAndOwnDebugModule(SlotType.Power, debugPowerModule);
+            InstallAndOwnDebugModule(SlotType.Stability, debugStabilityModule);
+            InstallAndOwnDebugModule(SlotType.Flow, debugFlowModule);
+            InstallAndOwnDebugModule(SlotType.Echo, debugEchoModule);
 
             Debug.Log($"[RunManager] New run started. Core: {State.coreDie?.displayName}, HP: {State.currentHp}, Pool size: {State.dicePool.Count}");
+        }
+
+        private void InstallAndOwnDebugModule(SlotType slot, ModuleData module)
+        {
+            if (module == null) return;
+            State.installedModules[slot] = module;
+            State.AddOwnedModule(module);
+        }
+
+        /// <summary>Shuffles the current Draw Pile in place (Fisher-Yates).</summary>
+        private void ShuffleDrawPile()
+        {
+            var pile = State.drawPile;
+            for (int i = pile.Count - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                (pile[i], pile[j]) = (pile[j], pile[i]);
+            }
         }
 
         /// <summary>

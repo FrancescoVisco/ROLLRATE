@@ -59,6 +59,15 @@ namespace Rollrate.Combat
             _prismTargetSlot = null;
             _permanentlyInhibitedValues.Clear();
             PersistentDestroyValue = -1;
+
+            // Deck/Discard reset: every fight starts with a full, freshly
+            // shuffled Draw Pile from all owned dice and an empty Discard
+            // Pile - confirmed design rule, not just a first-run default.
+            if (Rollrate.Core.RunManager.Instance != null)
+            {
+                Rollrate.Core.RunManager.Instance.State.InitializeDeckForFight();
+            }
+
             if (VerboseLogging) Debug.Log($"[EnemyController] Fight started against {enemyData?.displayName}, HP: {CurrentHp}");
         }
 

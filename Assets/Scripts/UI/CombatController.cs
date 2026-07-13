@@ -33,6 +33,7 @@ namespace Rollrate.UI
         [SerializeField] private SlotDropZone stabilitySlot;
         [SerializeField] private SlotDropZone flowSlot;
         [SerializeField] private SlotDropZone echoSlot;
+        [SerializeField] private UnityEngine.UI.Button resolveButton; // disabled after resolving, re-enabled once the player rolls again
 
         [Header("Fallback Debug Values (used only if Enemy Controller is not assigned)")]
         [SerializeField] private int debugThreshold = 10;
@@ -94,6 +95,7 @@ namespace Rollrate.UI
 
             if (!needsTarget)
             {
+                if (_awaitingTargetSelection) gameHUD?.ClearMessage();
                 _awaitingTargetSelection = false;
                 _flowTargetSlot = null;
                 return;
@@ -232,7 +234,8 @@ namespace Rollrate.UI
             var state = RunManager.Instance.State;
 
             state.installedModules.TryGetValue(SlotType.Flow, out ModuleData flowModuleCheck);
-            if (ModuleNeedsTarget(flowModuleCheck) && _flowTargetSlot == null)
+            bool flowHasDiePlaced = flowSlot != null && flowSlot.placedDie != null;
+            if (flowHasDiePlaced && ModuleNeedsTarget(flowModuleCheck) && _flowTargetSlot == null)
             {
                 gameHUD?.ShowMessage($"Choose {flowModuleCheck.displayName}'s target die first (click another placed die)!");
                 Debug.LogWarning("[CombatController] ResolveTurn blocked - Flow's target die hasn't been chosen yet.");
@@ -418,6 +421,9 @@ namespace Rollrate.UI
             _flowTargetSlot = null;
             _awaitingTargetSelection = false;
             _needsReroll = true;
+            diceRoller?.DiscardCurrentHand();
+            diceRoller?.SetRollButtonInteractable(true);
+            if (resolveButton != null) resolveButton.interactable = false;
             gameHUD?.RefreshStats();
             gameHUD?.ShowMessage("Turn resolved. Roll the dice to continue.");
         }
@@ -495,6 +501,7 @@ namespace Rollrate.UI
             _needsReroll = false;
             _flowTargetSlot = null;
             _awaitingTargetSelection = false;
+            if (resolveButton != null) resolveButton.interactable = true;
             gameHUD?.ClearMessage();
             RefreshSlotLabels();
         }
@@ -558,6 +565,12 @@ namespace Rollrate.UI
                         Debug.LogWarning("[CombatController] Changeover: 10 Charges reached, but no Changeover Reward Die is assigned on CombatController - nothing added.");
                     }
                 }
+            }
+
+            if (result.NextShopDiscountPercent > 0f)
+            {
+                // Keep the best discount if somehow more than one source triggers in the same turn.
+                state.pendingShopDiscountPercent = Mathf.Max(state.pendingShopDiscountPercent, result.NextShopDiscountPercent);
             }
 
             if (result.NextTurnPowerBonus > 0)

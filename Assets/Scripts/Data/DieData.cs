@@ -26,6 +26,10 @@ namespace Rollrate.Data
         public Sprite dieSprite;
         public Color casteColor = Color.white;
 
+        [Header("Shop - Evolution Chain")]
+        [Tooltip("The next die this evolves into at the Shop (e.g. D4's Next Tier is D6). Leave empty for D20 - it's already the maximum.")]
+        public DieData nextTier;
+
         /// <summary>
         /// Returns which range a rolled value falls into.
         /// </summary>

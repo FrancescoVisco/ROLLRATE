@@ -24,11 +24,10 @@ namespace Rollrate.Combat.Modules
 
         public override ModuleResult ApplyFrequencyEffect(int dieValue, CombatContext ctx)
         {
-            // The discount is written to a persistent flag on ShopState;
-            // here we only return the "raw" combat-turn result.
             return new ModuleResult
             {
-                DebugLog = "Scrap Frequency: 25% discount on next purchase (flag ShopState.NextPurchaseDiscount = 0.25f)"
+                NextShopDiscountPercent = 0.25f,
+                DebugLog = "Scrap Frequency: 25% discount on next Module or Die purchase at the Shop"
             };
         }
     }

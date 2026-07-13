@@ -33,6 +33,9 @@ namespace Rollrate.Combat
         public DieData InhibitorDieType => enemyData != null ? enemyData.inhibitorDie : null;
         public bool IsDefeated => CurrentHp <= 0;
 
+        /// <summary>The full EnemyData asset for this fight - used by the enemy info tooltip.</summary>
+        public EnemyData Data => enemyData;
+
         // --- Persistent per-enemy ability state ---
         private int _permanentThresholdBonus;
         private SlotType? _prismTargetSlot;

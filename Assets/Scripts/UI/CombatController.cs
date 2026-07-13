@@ -579,6 +579,32 @@ namespace Rollrate.UI
             Debug.Log("[CombatController] Placement reset - all dice returned to hand.");
         }
 
+        /// <summary>
+        /// Computes the enemy's current effective Threshold for display in
+        /// the HUD (base Threshold + permanent bonuses + ability modifier),
+        /// using whatever is known right now (Core roll, Inhibitor roll).
+        /// Call after Roll and after Resolve to keep the HUD in sync.
+        /// Note: a few abilities that react to specific slot placements
+        /// (evaluated only at Resolve time) won't be reflected in this
+        /// preview - this is the best available estimate before placement.
+        /// </summary>
+        public int PreviewEffectiveThreshold()
+        {
+            if (enemyController == null) return debugThreshold;
+
+            var state = RunManager.Instance.State;
+            CombatContext ctx = BuildContext(state, flowSlotOccupied: false);
+            var abilityCtx = new EnemyAbilityContext
+            {
+                Ctx = ctx,
+                PlacedValues = new Dictionary<SlotType, int>(),
+                InstalledModules = state.installedModules,
+                State = state,
+                Enemy = enemyController
+            };
+            return enemyController.GetEffectiveThreshold(abilityCtx);
+        }
+
         private CombatContext BuildContext(GameState state, bool flowSlotOccupied)
         {
             int coreValue = diceRoller.LastCoreRolledValue;

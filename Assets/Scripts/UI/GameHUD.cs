@@ -17,10 +17,13 @@ namespace Rollrate.UI
     {
         [Header("References")]
         [SerializeField] private EnemyController enemyController;
+        [SerializeField] private CombatController combatController;
 
         [Header("UI Labels")]
         [SerializeField] private TextMeshProUGUI playerHpText;
+        [SerializeField] private TextMeshProUGUI enemyNameText;
         [SerializeField] private TextMeshProUGUI enemyHpText;
+        [SerializeField] private TextMeshProUGUI thresholdText;
         [SerializeField] private TextMeshProUGUI statusMessageText;
 
         private void Start()
@@ -38,7 +41,7 @@ namespace Rollrate.UI
             RefreshStats();
         }
 
-        /// <summary>Refreshes HP labels from current game state.</summary>
+        /// <summary>Refreshes HP, Threshold, and other labels from current game state.</summary>
         public void RefreshStats()
         {
             var state = RunManager.Instance.State;
@@ -48,9 +51,19 @@ namespace Rollrate.UI
                 playerHpText.text = $"HP: {state.currentHp} / {state.maxHp}";
             }
 
+            if (enemyNameText != null && enemyController != null && enemyController.Data != null)
+            {
+                enemyNameText.text = enemyController.Data.displayName;
+            }
+
             if (enemyHpText != null && enemyController != null)
             {
                 enemyHpText.text = $"Enemy HP: {enemyController.CurrentHp} / {enemyController.MaxHp}";
+            }
+
+            if (thresholdText != null && combatController != null)
+            {
+                thresholdText.text = $"Threshold: {combatController.PreviewEffectiveThreshold()}";
             }
         }
 

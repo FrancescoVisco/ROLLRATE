@@ -21,6 +21,10 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
     - {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
     - {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+    - {fileID: 11400000, guid: 9c2646a23bfb1dc4d9524616aab080cd, type: 2}
+    - {fileID: 11400000, guid: 349657b8350b8b14497fdc0efcaba698, type: 2}
+    - {fileID: 11400000, guid: c87f0640b7bc20743bd1378f088eb613, type: 2}
+    - {fileID: 11400000, guid: 07f3c311109770f42b4066f44b7a8cc6, type: 2}
   gradeII:
     dice:
     - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}

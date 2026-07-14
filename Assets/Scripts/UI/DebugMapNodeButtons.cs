@@ -12,10 +12,16 @@ namespace Rollrate.UI
     public class DebugMapNodeButtons : MonoBehaviour
     {
         [SerializeField] private string shopSceneName = "ShopScene";
+        [SerializeField] private string collectionSceneName = "CollectionScene";
 
         public void EnterShop()
         {
             NodeSceneLoader.EnterNode(shopSceneName);
+        }
+
+        public void EnterCollection()
+        {
+            NodeSceneLoader.EnterNode(collectionSceneName);
         }
     }
 }

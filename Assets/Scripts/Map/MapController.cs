@@ -161,7 +161,8 @@ namespace Rollrate.Map
                 case NodeType.Conflict: return combatSceneName;
                 case NodeType.Overload: return combatSceneName;
                 case NodeType.Archive: return archiveSceneName;
-                default: return null; // Glitch already resolves to another type before this is called; Terminal not wired yet
+                case NodeType.Terminal: return combatSceneName;
+                default: return null; // Glitch already resolves to another type before this is called
             }
         }
 
@@ -186,7 +187,7 @@ namespace Rollrate.Map
                 return;
             }
 
-            if (node.type == NodeType.Conflict || node.type == NodeType.Overload)
+            if (node.type == NodeType.Conflict || node.type == NodeType.Overload || node.type == NodeType.Terminal)
             {
                 if (enemyRegistry == null)
                 {
@@ -195,7 +196,9 @@ namespace Rollrate.Map
                 }
 
                 var state = RunManager.Instance.State;
-                EnemyTier tier = node.type == NodeType.Overload ? EnemyTier.Elite : EnemyTier.Base;
+                EnemyTier tier = node.type == NodeType.Terminal ? EnemyTier.Guardian
+                                : node.type == NodeType.Overload ? EnemyTier.Elite
+                                : EnemyTier.Base;
                 EnemyData enemy = enemyRegistry.GetRandom(state.currentEchelon, tier);
 
                 if (enemy == null)
@@ -265,8 +268,51 @@ namespace Rollrate.Map
                 }
                 else
                 {
-                    Debug.Log("[MapController] Reached the Terminal node's scene and returned - Echelon advancement/Recalibration isn't wired yet.");
+                    ApplyRecalibration(state);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Post-Terminal-victory transition (design doc Section 7): pay the
+        /// Tassa di Sfarzo (a percentage of CURRENT Scrap - always payable
+        /// by construction, since it's proportional rather than a fixed
+        /// amount), then mandatory Core Die evolution (the ONLY way the
+        /// Core evolves - never via the Shop), then advance to the next
+        /// Grade's Page 1. Grade V has no further Grade to advance to -
+        /// treated as a full run completion for now.
+        /// </summary>
+        private void ApplyRecalibration(GameState state)
+        {
+            // Tax percentage for the transition LEAVING the current grade (I->II 10%, II->III 15%, III->IV 20%, IV->V 25%).
+            float[] taxByGrade = { 0.10f, 0.15f, 0.20f, 0.25f };
+
+            if (state.currentEchelon <= taxByGrade.Length)
+            {
+                int tax = Mathf.CeilToInt(state.scrap * taxByGrade[state.currentEchelon - 1]);
+                state.scrap -= tax;
+                Debug.Log($"[MapController] Recalibrazione: Tassa di Sfarzo pagata ({tax} Scrap).");
+            }
+
+            if (state.coreDie.nextTier != null)
+            {
+                Debug.Log($"[MapController] Recalibrazione: Core evoluto da {state.coreDie.displayName} a {state.coreDie.nextTier.displayName}.");
+                state.coreDie = state.coreDie.nextTier;
+            }
+            else
+            {
+                Debug.Log($"[MapController] Recalibrazione: Core già al Grado massimo ({state.coreDie.displayName}) - nessuna evoluzione.");
+            }
+
+            if (state.currentEchelon < 5)
+            {
+                state.currentEchelon++;
+                Debug.Log($"[MapController] Recalibrazione completata - avanzato a Grado {state.currentEchelon}.");
+                GenerateAndRenderPage(1);
+            }
+            else
+            {
+                Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! (schermata di fine run non ancora implementata)");
             }
         }
     }

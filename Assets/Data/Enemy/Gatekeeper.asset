@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Gatekeeper
   flavorText: Worker fragments, rigid and colorless
+  grade: 1
+  tier: 2
   maxHp: 20
   baseThreshold: 14
   inhibitorDie: {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}

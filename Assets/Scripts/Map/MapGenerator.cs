@@ -63,9 +63,11 @@ namespace Rollrate.Map
                 page.columns.Add(column);
             }
 
-            // --- Exit column: forced Terminal on Page 3, otherwise a normal single rolled node ---
+            // --- Exit column: forced Terminal on Page 3, forced Overload
+            // (Elite) on Pages 1-2 - each Page culminates in an escalating
+            // challenge before advancing, rather than a random roll. ---
             int exitColumnIndex = BodyColumnCount + 1;
-            NodeType exitType = pageNumber == 3 ? NodeType.Terminal : RollNodeType(pageNumber, grade);
+            NodeType exitType = pageNumber == 3 ? NodeType.Terminal : NodeType.Overload;
             var exitColumn = new List<MapNode> { new MapNode { page = pageNumber, column = exitColumnIndex, row = 0, type = exitType } };
             page.columns.Add(exitColumn);
 

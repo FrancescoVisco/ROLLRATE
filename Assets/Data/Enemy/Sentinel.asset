@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Sentinel
   flavorText: Elite jammer unit
+  grade: 2
+  tier: 1
   maxHp: 18
   baseThreshold: 16
   inhibitorDie: {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}

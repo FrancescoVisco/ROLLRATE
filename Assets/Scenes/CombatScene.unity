@@ -153,11 +153,11 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2025726614}
-  - {fileID: 1205429606}
-  - {fileID: 532145810}
+  - {fileID: 521375792}
   - {fileID: 1280218024}
   - {fileID: 2092926959}
   - {fileID: 1092163885}
+  - {fileID: 532145810}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &56546838
@@ -902,6 +902,51 @@ Transform:
   - {fileID: 60427091}
   m_Father: {fileID: 1983060061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &521375791
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 521375792}
+  - component: {fileID: 521375793}
+  m_Layer: 0
+  m_Name: EnemyController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &521375792
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 521375791}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 56546837}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &521375793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 521375791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 594dc6f74c05c1e4ebc825193088041a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyData: {fileID: 0}
 --- !u!1 &527295608
 GameObject:
   m_ObjectHideFlags: 0
@@ -2137,51 +2182,6 @@ MonoBehaviour:
   wrapWidth: 280
   padding: 16
   mouseOffset: {x: 16, y: -16}
---- !u!1 &1205429604
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1205429606}
-  - component: {fileID: 1205429605}
-  m_Layer: 0
-  m_Name: EnemyContoller
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1205429605
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1205429604}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 594dc6f74c05c1e4ebc825193088041a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enemyData: {fileID: 11400000, guid: ed2b0517e6a7c4b41bc0e38bd69e3d52, type: 2}
---- !u!4 &1205429606
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1205429604}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -22.281845, y: 52.609505, z: 1.6073774}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 56546837}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1209374372
 GameObject:
   m_ObjectHideFlags: 0
@@ -2233,7 +2233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b413b54f7b6c3947a1d71952dbc7058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyController: {fileID: 1205429605}
+  enemyController: {fileID: 0}
 --- !u!114 &1209374375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2575,7 +2575,7 @@ MonoBehaviour:
   handContainer: {fileID: 718897219}
   coreDisplaySlot: {fileID: 1683249652}
   enemyDieDisplaySlot: {fileID: 1209374373}
-  enemyController: {fileID: 1205429605}
+  enemyController: {fileID: 0}
   combatController: {fileID: 2025726613}
   gameHUD: {fileID: 2092926960}
   rollButton: {fileID: 1283890140}
@@ -4513,7 +4513,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   diceRoller: {fileID: 1280218023}
-  enemyController: {fileID: 1205429605}
+  enemyController: {fileID: 521375793}
   powerSlot: {fileID: 527295610}
   stabilitySlot: {fileID: 1300653196}
   flowSlot: {fileID: 889568375}
@@ -4715,7 +4715,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d925663a51c3e25418b05b40371e6cce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyController: {fileID: 1205429605}
+  enemyController: {fileID: 521375793}
   combatController: {fileID: 2025726613}
   playerHpText: {fileID: 1980027543}
   enemyNameText: {fileID: 1377750092}

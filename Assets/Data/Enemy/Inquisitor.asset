@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Inquisitor
   flavorText: Pure geometric refraction entity
+  grade: 4
+  tier: 0
   maxHp: 30
   baseThreshold: 22
   inhibitorDie: {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}

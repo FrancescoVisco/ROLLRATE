@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Compiler
   flavorText: Elite lockdown unit
+  grade: 1
+  tier: 1
   maxHp: 12
   baseThreshold: 12
   inhibitorDie: {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Judge
   flavorText: Elite stasis unit
+  grade: 4
+  tier: 2
   maxHp: 42
   baseThreshold: 26
   inhibitorDie: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}

@@ -44,9 +44,19 @@ namespace Rollrate.Combat
 
         private void Awake()
         {
+            // If the Map queued up a specific enemy (real gameplay flow),
+            // use that; otherwise fall back to the Inspector-assigned
+            // debug enemy (for testing this scene standalone/via the old
+            // debug buttons).
+            EnemyData toFight = Rollrate.Core.CombatNodeContext.PendingEnemy != null
+                ? Rollrate.Core.CombatNodeContext.PendingEnemy
+                : enemyData;
+
+            Rollrate.Core.CombatNodeContext.PendingEnemy = null; // consumed
+
             // Populated here (not in Start()) so enemy HP/data is guaranteed
             // ready before any other script's Start() runs.
-            StartFight(enemyData);
+            StartFight(toFight);
         }
 
         /// <summary>Resets this controller for a fresh fight against the given enemy.</summary>

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Warden
   flavorText: Elite stasis unit
+  grade: 4
+  tier: 1
   maxHp: 34
   baseThreshold: 24
   inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}

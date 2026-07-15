@@ -2,21 +2,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Rollrate.Core;
+using Rollrate.Data;
 
 namespace Rollrate.Map
 {
     /// <summary>
     /// Renders and drives the current Page: generates it, positions node
     /// buttons in a grid, draws simple connection lines, tracks the
-    /// player's position, and enters a node's scene when clicked (if that
-    /// node type is wired up yet - see sceneNameByType).
+    /// player's position, and enters a node's scene when clicked.
     ///
-    /// SCOPE OF THIS FIRST VERSION: Merchant/Bonfire/Dismantle nodes are
-    /// fully functional (their scenes already exist). Conflict/Overload/
-    /// Terminal (need dynamic enemy selection + boss/Recalibration logic)
-    /// and Archive/Glitch (not built yet) will log a placeholder message
-    /// instead of transitioning - so map navigation is testable now without
-    /// blocking on those still-pending systems.
+    /// SCOPE SO FAR: Merchant/Bonfire/Dismantle/Conflict/Overload are fully
+    /// functional. Archive/Glitch/Terminal (need the Test system, a mystery
+    /// mechanic, and Boss+Recalibration respectively) still log a
+    /// placeholder message instead of transitioning.
     /// </summary>
     public class MapController : MonoBehaviour
     {
@@ -33,6 +31,10 @@ namespace Rollrate.Map
         [SerializeField] private string merchantSceneName = "ShopScene";
         [SerializeField] private string bonfireSceneName = "RestNodeScene";
         [SerializeField] private string dismantleSceneName = "DismantleScene";
+        [SerializeField] private string combatSceneName = "CombatScene";
+
+        [Header("Combat Node Setup")]
+        [SerializeField] private EnemyRegistry enemyRegistry;
 
         private MapPage _currentPage;
         private MapNode _currentNode;
@@ -155,7 +157,9 @@ namespace Rollrate.Map
                 case NodeType.Merchant: return merchantSceneName;
                 case NodeType.Bonfire: return bonfireSceneName;
                 case NodeType.Dismantle: return dismantleSceneName;
-                default: return null; // Conflict/Overload/Archive/Glitch/Terminal - not wired yet
+                case NodeType.Conflict: return combatSceneName;
+                case NodeType.Overload: return combatSceneName;
+                default: return null; // Archive/Glitch/Terminal - not wired yet
             }
         }
 
@@ -168,6 +172,27 @@ namespace Rollrate.Map
             {
                 Debug.Log($"[MapController] {node.type} node isn't wired to a scene yet - staying on the Map for now.");
                 return;
+            }
+
+            if (node.type == NodeType.Conflict || node.type == NodeType.Overload)
+            {
+                if (enemyRegistry == null)
+                {
+                    Debug.LogError("[MapController] No Enemy Registry assigned - can't pick an enemy for this fight.");
+                    return;
+                }
+
+                var state = RunManager.Instance.State;
+                EnemyTier tier = node.type == NodeType.Overload ? EnemyTier.Elite : EnemyTier.Base;
+                EnemyData enemy = enemyRegistry.GetRandom(state.currentEchelon, tier);
+
+                if (enemy == null)
+                {
+                    Debug.LogError($"[MapController] No {tier} enemy found for Grade {state.currentEchelon} - check the Enemy Registry.");
+                    return;
+                }
+
+                CombatNodeContext.PendingEnemy = enemy;
             }
 
             _pendingSceneName = sceneName;
@@ -186,6 +211,16 @@ namespace Rollrate.Map
         {
             if (unloadedScene.name != _pendingSceneName) return;
             _pendingSceneName = null;
+
+            // A lost fight fragments progress back to Grade I, Page 1 -
+            // GameState.ApplyFragmentation (via RunManager.HandleDefeat)
+            // already reset currentEchelon/currentPage, so just regenerate.
+            if (unloadedScene.name == combatSceneName && !CombatNodeContext.LastFightWasVictory)
+            {
+                Debug.Log("[MapController] Defeat - Fragmentation. Returning to Grade I, Page 1.");
+                GenerateAndRenderPage(1);
+                return;
+            }
 
             // Reached the end of this Page - generate the next one.
             if (_currentNode.column == _currentPage.columns.Count - 1)

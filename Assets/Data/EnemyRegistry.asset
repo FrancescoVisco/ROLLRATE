@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5c95356814462d4dbd6bb4f3b26136f, type: 3}
+  m_Name: EnemyRegistry
+  m_EditorClassIdentifier: 
+  allEnemies:
+  - {fileID: 11400000, guid: 4c89b3365cafda749943be49a96123a8, type: 2}
+  - {fileID: 11400000, guid: 1fac16e47152cab4d9f89eaa7a6fb8c8, type: 2}
+  - {fileID: 11400000, guid: 5b131a3d8fa0e404d909b2f085923e12, type: 2}
+  - {fileID: 11400000, guid: 22f15b275b2cffe4f9744feac609f078, type: 2}
+  - {fileID: 11400000, guid: 4b105c5393d8db24695c736a42fbc2b7, type: 2}
+  - {fileID: 11400000, guid: 5b60001a77f2c9d4e966fd939383dfc3, type: 2}
+  - {fileID: 11400000, guid: e66f8c60c9074fa4195fdcff952f3e99, type: 2}
+  - {fileID: 11400000, guid: 3424cc5be6400f74db5474b04a02c724, type: 2}
+  - {fileID: 11400000, guid: 97ef2e26598bdf94dafcdb8621133902, type: 2}
+  - {fileID: 11400000, guid: 0f445aeee1286b045afcbd94ef82d46c, type: 2}
+  - {fileID: 11400000, guid: ed2b0517e6a7c4b41bc0e38bd69e3d52, type: 2}
+  - {fileID: 11400000, guid: 258c3db1f030ce34d8f526927f0b612e, type: 2}
+  - {fileID: 11400000, guid: 47d769ee90d1d06439d6f6a246df48af, type: 2}
+  - {fileID: 11400000, guid: 021bcfae9952fc144b5440e806078c7e, type: 2}
+  - {fileID: 11400000, guid: f5cc6861e5bd23c45a8abff428eeaceb, type: 2}

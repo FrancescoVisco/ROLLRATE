@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Null-Pointer
   flavorText: Elite glitch unit
+  grade: 5
+  tier: 1
   maxHp: 42
   baseThreshold: 28
   inhibitorDie: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}

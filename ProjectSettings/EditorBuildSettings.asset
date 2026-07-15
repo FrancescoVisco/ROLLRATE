@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CollectionScene.unity
     guid: 13a39c4b4bc58a34e89d99c72ca07830
+  - enabled: 1
+    path: Assets/Scenes/DismantleScene.unity
+    guid: c02daf69ea6bcef45bacc0e111988196
+  - enabled: 1
+    path: Assets/Scenes/RestScene.unity
+    guid: f8ef9e623d617c74aa8438d32fcf5278
   m_configObjects: {}

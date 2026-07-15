@@ -176,6 +176,49 @@ namespace Rollrate.Core
             installedModules[module.slot] = module;
         }
 
+        // --- Dismantling (Smantellamento) ---
+
+        /// <summary>
+        /// True if dismantling this exact module copy is allowed: the
+        /// design rule requires keeping at least one module per slot TYPE,
+        /// so this only checks the total owned count for that module's
+        /// slot (not copies of this specific module) stays above zero
+        /// after removal.
+        /// </summary>
+        public bool CanDismantleModule(ModuleData module)
+        {
+            if (module == null) return false;
+            return ownedModules.TryGetValue(module.slot, out var owned) && owned.Count > 1;
+        }
+
+        /// <summary>
+        /// True if dismantling one die is allowed: the design rule requires
+        /// keeping at least 4 dice in the pool after removal.
+        /// </summary>
+        public bool CanDismantleDie()
+        {
+            return dicePool.Count > 4;
+        }
+
+        /// <summary>
+        /// Removes one owned copy of a module. If it was the equipped one
+        /// for that slot, automatically re-equips another owned copy of
+        /// that slot (guaranteed to exist - see CanDismantleModule). Does
+        /// NOT check CanDismantleModule itself - callers must check first.
+        /// </summary>
+        public bool RemoveOwnedModule(ModuleData module)
+        {
+            if (module == null) return false;
+            if (!ownedModules.TryGetValue(module.slot, out var owned) || !owned.Remove(module)) return false;
+
+            if (installedModules.TryGetValue(module.slot, out var equipped) && equipped == module)
+            {
+                if (owned.Count > 0) installedModules[module.slot] = owned[0];
+                else installedModules.Remove(module.slot);
+            }
+            return true;
+        }
+
         // --- Deck (Draw Pile / Discard Pile) ---
 
         /// <summary>

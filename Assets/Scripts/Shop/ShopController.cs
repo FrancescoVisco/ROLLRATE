@@ -175,6 +175,11 @@ namespace Rollrate.Shop
             RunManager.Instance.State.EquipModule(module);
         }
 
+        // NOTE: Dismantling now lives entirely in the dedicated Dismantle
+        // Node (Rollrate.Dismantle.DismantleController), using a flat
+        // Scrap-per-Grade table instead of a percentage of purchase cost.
+        // It's no longer part of the Shop at all - see DismantleController.
+
         /// <summary>Returns every owned module for the given slot (for an equip/swap UI).</summary>
         public List<ModuleData> GetOwnedModulesForSlot(SlotType slot)
         {
@@ -194,6 +199,24 @@ namespace Rollrate.Shop
             state.scrap -= cost;
             state.currentHp += amount;
             Debug.Log($"[ShopController] Repaired {amount} HP ({cost} Scrap). HP now {state.currentHp}/{state.maxHp}.");
+            return true;
+        }
+
+        /// <summary>
+        /// Rest Node's free heal: recovers half of the missing HP (rounded
+        /// up), no Scrap cost. Intended as a single action per node visit -
+        /// the calling UI (RestUI) is responsible for disabling its button
+        /// after one use, this method itself doesn't track "already rested".
+        /// </summary>
+        public bool TryFreeRest()
+        {
+            var state = RunManager.Instance.State;
+            int missing = state.maxHp - state.currentHp;
+            if (missing <= 0) return false;
+
+            int healAmount = Mathf.CeilToInt(missing / 2f);
+            state.currentHp = Mathf.Min(state.maxHp, state.currentHp + healAmount);
+            Debug.Log($"[ShopController] Free Rest: +{healAmount} HP. HP now {state.currentHp}/{state.maxHp}.");
             return true;
         }
 

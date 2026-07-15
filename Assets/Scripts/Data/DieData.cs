@@ -15,6 +15,8 @@ namespace Rollrate.Data
         [Header("Identity")]
         public string displayName; // e.g. "D4", "D6", "D20"
         public int faces;
+        [Tooltip("Which Grade (Echelon, 1-5) this die belongs to - used for Dismantle refund value, independent of the player's current Grade. D4/D6=1, D8/D10=2, D12=3, D14/D16=4, D20=5.")]
+        public int grade = 1;
 
         [Header("Ranges (from the design's Dead Zone table)")]
         [Tooltip("Maximum value included in the Low range")]

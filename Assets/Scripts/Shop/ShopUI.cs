@@ -9,11 +9,13 @@ namespace Rollrate.Shop
     /// <summary>
     /// Shop UI: dynamically instantiates one ShopOfferRowUI per current
     /// offer (up to Max Offers, a random Module/Die mix decided by
-    /// ShopController), plus Repair HP / Increase Max HP / Reroll / Leave.
-    /// Lives in the Shop scene, loaded additively on top of the Map.
+    /// ShopController), plus Reroll / Leave. Lives in the Shop scene,
+    /// loaded additively on top of the Map.
     ///
-    /// CHECKPOINT: buying a Module installs it directly (replacing whatever
-    /// was in that slot) - no owned/equipped split for now.
+    /// Repair HP / Increase Max HP / Collection (equip) moved to the Rest
+    /// Node (RestNodeUI) - the Merchant is a purely commercial node now
+    /// (buy, reroll, dismantle), while healing/reorganizing gear happens
+    /// at Rest instead.
     /// </summary>
     public class ShopUI : MonoBehaviour
     {
@@ -29,10 +31,6 @@ namespace Rollrate.Shop
         [SerializeField] private Transform offersContainer;
 
         [Header("Other Actions")]
-        [SerializeField] private Button repairButton;
-        [SerializeField] private TextMeshProUGUI repairCostText;
-        [SerializeField] private Button increaseMaxHpButton;
-        [SerializeField] private TextMeshProUGUI increaseMaxHpCostText;
         [SerializeField] private Button rerollButton;
         [SerializeField] private TextMeshProUGUI rerollCostText;
         [SerializeField] private Button leaveButton;
@@ -44,6 +42,9 @@ namespace Rollrate.Shop
 
         private void Start()
         {
+            // Leave must always work, even if something else below fails.
+            if (leaveButton != null) leaveButton.onClick.AddListener(OnLeaveClicked);
+
             if (RunManager.Instance == null)
             {
                 Debug.LogError("[ShopUI] RunManager.Instance is null - this scene needs RunManager already loaded " +
@@ -51,10 +52,7 @@ namespace Rollrate.Shop
                 return;
             }
 
-            if (repairButton != null) repairButton.onClick.AddListener(OnRepairClicked);
-            if (increaseMaxHpButton != null) increaseMaxHpButton.onClick.AddListener(OnIncreaseMaxHpClicked);
             if (rerollButton != null) rerollButton.onClick.AddListener(OnRerollClicked);
-            if (leaveButton != null) leaveButton.onClick.AddListener(OnLeaveClicked);
 
             shopController.OnOffersChanged += RefreshOfferBoard;
 
@@ -106,21 +104,7 @@ namespace Rollrate.Shop
 
         private void RefreshActionCosts()
         {
-            if (repairCostText != null) repairCostText.text = $"{shopController.GetRepairHpCost(1)} Scrap";
-            if (increaseMaxHpCostText != null) increaseMaxHpCostText.text = $"{shopController.GetIncreaseMaxHpCost()} Scrap";
             if (rerollCostText != null) rerollCostText.text = $"{shopController.GetRerollCost()} Scrap";
-        }
-
-        private void OnRepairClicked()
-        {
-            shopController.TryRepairHp(1);
-            Refresh();
-        }
-
-        private void OnIncreaseMaxHpClicked()
-        {
-            shopController.TryIncreaseMaxHp();
-            Refresh();
         }
 
         private void OnRerollClicked()

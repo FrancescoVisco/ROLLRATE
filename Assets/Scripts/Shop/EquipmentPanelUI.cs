@@ -8,9 +8,9 @@ namespace Rollrate.Shop
     /// <summary>
     /// Shows every OWNED module for each of the 4 slots, letting the player
     /// pick which one is actually equipped (installed) for combat. Lives in
-    /// its own scene (e.g. "CollectionScene"), loaded/unloaded additively
+    /// the Rest scene (e.g. "RestScene"), alongside RestUI, loaded/unloaded additively
     /// the same way as the Shop - a Map node will call
-    /// NodeSceneLoader.EnterNode("CollectionScene") once the Map exists;
+    /// NodeSceneLoader.EnterNode("RestScene") once the Map exists;
     /// for now, use a debug button (see DebugMapNodeButtons).
     /// </summary>
     public class EquipmentPanelUI : MonoBehaviour

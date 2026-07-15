@@ -152,7 +152,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 444727675}
   - {fileID: 2025726614}
   - {fileID: 1205429606}
   - {fileID: 532145810}
@@ -902,66 +901,6 @@ Transform:
   - {fileID: 980239974}
   - {fileID: 60427091}
   m_Father: {fileID: 1983060061}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &444727673
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 444727675}
-  - component: {fileID: 444727674}
-  m_Layer: 0
-  m_Name: RunManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &444727674
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 444727673}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2cb8b6e663372f4ba45b5e7ea8965f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  startingCoreDie: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
-  startingHp: 10
-  handSize: 6
-  debugStartingPool:
-  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
-  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
-  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
-  - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
-  - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
-  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
-  - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
-  - {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
-  debugPowerModule: {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
-  debugStabilityModule: {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
-  debugFlowModule: {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
-  debugEchoModule: {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
---- !u!4 &444727675
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 444727673}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -222.80894, y: -96.5344, z: 2.9622557}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 56546837}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &527295608
 GameObject:

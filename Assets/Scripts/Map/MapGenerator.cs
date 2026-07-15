@@ -46,8 +46,8 @@ namespace Rollrate.Map
         {
             var page = new MapPage { pageNumber = pageNumber };
 
-            // --- Column 0: Entry (single node, no gameplay content) ---
-            var entryColumn = new List<MapNode> { new MapNode { page = pageNumber, column = 0, row = 0, type = NodeType.Conflict } };
+            // --- Column 0: Entry (single node, no gameplay content, never clickable) ---
+            var entryColumn = new List<MapNode> { new MapNode { page = pageNumber, column = 0, row = 0, type = NodeType.Entry } };
             page.columns.Add(entryColumn);
 
             // --- Body columns ---

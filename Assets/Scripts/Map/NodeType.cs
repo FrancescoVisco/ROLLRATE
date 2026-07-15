@@ -7,6 +7,7 @@ namespace Rollrate.Map
     /// </summary>
     public enum NodeType
     {
+        Entry,          // Ingresso - starting position, no gameplay content, never clickable
         Conflict,       // Nodo Conflitto
         Merchant,       // Nodo Mercante
         Archive,        // Nodo Archivio

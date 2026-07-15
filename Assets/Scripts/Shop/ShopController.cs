@@ -114,10 +114,21 @@ namespace Rollrate.Shop
             if (state.pendingShopDiscountPercent > 0f) state.pendingShopDiscountPercent = 0f;
         }
 
-        /// <summary>True if this offer is a Module the player already owns (shown/blocked in the UI).</summary>
+        /// <summary>
+        /// True if this offer is a Module the player already owns at least
+        /// one copy of - informational only (shown as "(Owned xN)" in the
+        /// UI), does NOT block purchase. Owning duplicates is intentional:
+        /// spares can be Dismantled for Scrap without losing your equipped copy.
+        /// </summary>
         public bool IsOfferOwned(ShopOffer offer)
         {
             return offer.IsModule && RunManager.Instance.State.OwnsModule(offer.module);
+        }
+
+        /// <summary>How many copies of this offer's module the player already owns (0 for dice offers).</summary>
+        public int GetOfferOwnedCount(ShopOffer offer)
+        {
+            return offer.IsModule ? RunManager.Instance.State.GetOwnedModuleCount(offer.module) : 0;
         }
 
         /// <summary>
@@ -125,17 +136,12 @@ namespace Rollrate.Shop
         /// pile. Modules are added to the OWNED collection for their slot -
         /// NOT auto-equipped, unless that slot currently has nothing
         /// equipped yet (first module for an empty slot is a convenience
-        /// auto-equip). Refuses to sell a Module already owned.
+        /// auto-equip). Buying a module you already own is allowed on
+        /// purpose - see GetOfferOwnedCount.
         /// </summary>
         public bool TryBuyOffer(ShopOffer offer)
         {
             var state = RunManager.Instance.State;
-
-            if (IsOfferOwned(offer))
-            {
-                Debug.LogWarning($"[ShopController] {offer.DisplayName} is already owned - purchase blocked.");
-                return false;
-            }
 
             int cost = GetOfferCost(offer);
             if (state.scrap < cost) return false;
@@ -150,7 +156,7 @@ namespace Rollrate.Shop
                 {
                     state.EquipModule(offer.module); // convenience: auto-equip only if that slot was empty
                 }
-                Debug.Log($"[ShopController] Bought {offer.module.displayName} for {offer.module.slot} ({cost} Scrap) - added to owned modules.");
+                Debug.Log($"[ShopController] Bought {offer.module.displayName} for {offer.module.slot} ({cost} Scrap) - now own {state.GetOwnedModuleCount(offer.module)}.");
             }
             else
             {

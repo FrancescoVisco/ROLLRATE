@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Rollrate.Data;
 
@@ -132,13 +133,27 @@ namespace Rollrate.Core
             if (index >= 0) list[index] = newDie;
         }
 
-        /// <summary>True if the given module is already owned for its own slot.</summary>
+        /// <summary>True if the given module is owned (at least one copy) for its own slot.</summary>
         public bool OwnsModule(ModuleData module)
         {
             return ownedModules.TryGetValue(module.slot, out var owned) && owned.Contains(module);
         }
 
-        /// <summary>Adds a module to the owned collection for its slot (does not equip it).</summary>
+        /// <summary>
+        /// How many copies of this module are currently owned. Owning more
+        /// than one is intentional - spares can be Dismantled for Scrap
+        /// (design's "must keep at least one module per type" rule) without
+        /// losing the copy you're actually using.
+        /// </summary>
+        public int GetOwnedModuleCount(ModuleData module)
+        {
+            return ownedModules.TryGetValue(module.slot, out var owned) ? owned.Count(m => m == module) : 0;
+        }
+
+        /// <summary>
+        /// Adds a module to the owned collection for its slot (does not
+        /// equip it). Duplicates are allowed on purpose - see GetOwnedModuleCount.
+        /// </summary>
         public void AddOwnedModule(ModuleData module)
         {
             if (!ownedModules.TryGetValue(module.slot, out var owned))
@@ -146,7 +161,7 @@ namespace Rollrate.Core
                 owned = new List<ModuleData>();
                 ownedModules[module.slot] = owned;
             }
-            if (!owned.Contains(module)) owned.Add(module);
+            owned.Add(module);
         }
 
         /// <summary>

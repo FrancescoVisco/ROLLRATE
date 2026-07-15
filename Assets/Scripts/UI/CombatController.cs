@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 using Rollrate.Core;
 using Rollrate.Data;
@@ -51,6 +52,26 @@ namespace Rollrate.UI
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void OnEnable()
+        {
+            // Whenever a node scene (Shop/Collection/Dismantle/Rest) unloads
+            // and we're back looking at Combat, refresh immediately instead
+            // of waiting for the next Roll - purchases/equips/heals done in
+            // that node should be visible right away.
+            SceneManager.sceneUnloaded += OnAnySceneUnloaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneUnloaded -= OnAnySceneUnloaded;
+        }
+
+        private void OnAnySceneUnloaded(Scene unloadedScene)
+        {
+            RefreshSlotLabels();
+            gameHUD?.RefreshStats();
         }
 
         private void Start()
@@ -502,7 +523,7 @@ namespace Rollrate.UI
             RefreshSlotLabels();
         }
 
-        private void RefreshSlotLabels()
+        public void RefreshSlotLabels()
         {
             var state = RunManager.Instance.State;
 

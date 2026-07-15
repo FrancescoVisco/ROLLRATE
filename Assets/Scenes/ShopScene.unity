@@ -1292,6 +1292,10 @@ MonoBehaviour:
   hpText: {fileID: 1559132994}
   offerRowPrefab: {fileID: 2510496046242653760, guid: 1dd1037a373295b46a79e5a2b0d05b9e, type: 3}
   offersContainer: {fileID: 471984229}
+  repairButton: {fileID: 1064586542}
+  repairCostText: {fileID: 1865254756}
+  increaseMaxHpButton: {fileID: 2062769202}
+  increaseMaxHpCostText: {fileID: 809286650}
   rerollButton: {fileID: 166954773}
   rerollCostText: {fileID: 708779445}
   leaveButton: {fileID: 1747594128}

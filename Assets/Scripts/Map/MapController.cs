@@ -150,6 +150,19 @@ namespace Rollrate.Map
             return _currentNode.connectionsToNextColumn.Contains(node.row);
         }
 
+        /// <summary>
+        /// Oscuramento (design doc Section 7, Grade IV+): node TYPES beyond
+        /// 2 columns of distance from the player's current position are
+        /// hidden ("???") until visited - structure/connections stay fully
+        /// visible, only the content is unknown. Never applies below Grade IV.
+        /// </summary>
+        public bool IsHiddenByFog(MapNode node)
+        {
+            if (_currentNode == null) return false;
+            if (RunManager.Instance.State.currentEchelon < 4) return false;
+            return (node.column - _currentNode.column) > 2;
+        }
+
         /// <summary>Maps a node type to its scene name, or null/empty if not wired up yet.</summary>
         private string GetSceneNameForType(NodeType type)
         {

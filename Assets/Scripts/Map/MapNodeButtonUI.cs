@@ -39,13 +39,18 @@ namespace Rollrate.Map
             _node = node;
             _controller = controller;
             _image = GetComponent<Image>();
-
-            if (label != null) label.text = node.type.ToString();
             Refresh();
         }
 
         public void Refresh()
         {
+            if (label != null)
+            {
+                label.text = (_node.visited || !_controller.IsHiddenByFog(_node))
+                    ? _node.type.ToString()
+                    : "???";
+            }
+
             if (_node.isCurrent) _image.color = currentColor;
             else if (_node.visited) _image.color = visitedColor;
             else if (_controller.IsReachable(_node)) _image.color = reachableColor;

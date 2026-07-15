@@ -36,6 +36,10 @@ namespace Rollrate.Core
         [SerializeField] private ModuleData debugFlowModule;
         [SerializeField] private ModuleData debugEchoModule;
 
+        [Header("Debug Only - Starting Grade")]
+        [Tooltip("Overrides the starting Echelon (Grade 1-5), purely for testing Grade-gated features (e.g. Oscuramento fog from Grade IV, Singolarità at Grade V) without having to play up to them. Leave at 1 for a normal run.")]
+        [SerializeField] private int debugStartingEchelon = 1;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -57,6 +61,14 @@ namespace Rollrate.Core
         public void StartNewRun()
         {
             State.ResetForNewRun(startingCoreDie, startingHp);
+
+            // Debug only: jump straight to a chosen Grade, skipping the
+            // normal Grade I start - lets Grade-gated features (fog,
+            // forced fights) be tested without a full playthrough.
+            if (debugStartingEchelon > 1)
+            {
+                State.currentEchelon = Mathf.Clamp(debugStartingEchelon, 1, 5);
+            }
 
             // Debug only: seed the pool with test dice so DiceRoller has more
             // than just the Core to roll, before the Shop can add dice for real.

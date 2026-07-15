@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: D4
   faces: 4
+  grade: 1
   lowMax: 2
   highMin: 4
   dieSprite: {fileID: 0}
   casteColor: {r: 1, g: 1, b: 1, a: 1}
+  nextTier: {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}

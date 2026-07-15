@@ -11,10 +11,10 @@ namespace Rollrate.Map
     /// buttons in a grid, draws simple connection lines, tracks the
     /// player's position, and enters a node's scene when clicked.
     ///
-    /// SCOPE SO FAR: Merchant/Bonfire/Dismantle/Conflict/Overload are fully
-    /// functional. Archive/Glitch/Terminal (need the Test system, a mystery
-    /// mechanic, and Boss+Recalibration respectively) still log a
-    /// placeholder message instead of transitioning.
+    /// SCOPE SO FAR: Merchant/Bonfire/Dismantle/Conflict/Overload/Glitch/
+    /// Archive are all fully functional. Only Terminal (Boss +
+    /// Recalibration) still logs a placeholder message instead of
+    /// transitioning.
     /// </summary>
     public class MapController : MonoBehaviour
     {
@@ -32,6 +32,7 @@ namespace Rollrate.Map
         [SerializeField] private string bonfireSceneName = "RestNodeScene";
         [SerializeField] private string dismantleSceneName = "DismantleScene";
         [SerializeField] private string combatSceneName = "CombatScene";
+        [SerializeField] private string archiveSceneName = "ArchiveScene";
 
         [Header("Combat Node Setup")]
         [SerializeField] private EnemyRegistry enemyRegistry;
@@ -159,13 +160,24 @@ namespace Rollrate.Map
                 case NodeType.Dismantle: return dismantleSceneName;
                 case NodeType.Conflict: return combatSceneName;
                 case NodeType.Overload: return combatSceneName;
-                default: return null; // Archive/Glitch/Terminal - not wired yet
+                case NodeType.Archive: return archiveSceneName;
+                default: return null; // Glitch already resolves to another type before this is called; Terminal not wired yet
             }
         }
 
         public void TryEnterNode(MapNode node)
         {
             if (!IsReachable(node)) return;
+
+            if (node.type == NodeType.Glitch)
+            {
+                node.type = RollGlitchOutcome();
+                Debug.Log($"[MapController] Glitch revealed as: {node.type}");
+                if (_buttonsByNode.TryGetValue(node, out var revealedButton))
+                {
+                    revealedButton.Setup(node, this); // refreshes label + color to the revealed type
+                }
+            }
 
             string sceneName = GetSceneNameForType(node.type);
             if (string.IsNullOrEmpty(sceneName))
@@ -207,16 +219,37 @@ namespace Rollrate.Map
             RefreshAllButtons();
         }
 
+        /// <summary>
+        /// Glitch reveal: one of the other 6 real node types, picked
+        /// uniformly at random. Never Entry/Terminal (structural, not
+        /// random) or Glitch itself (would be a no-op reveal).
+        /// </summary>
+        private NodeType RollGlitchOutcome()
+        {
+            NodeType[] possibleOutcomes =
+            {
+                NodeType.Conflict,
+                NodeType.Merchant,
+                NodeType.Archive,
+                NodeType.Overload,
+                NodeType.Bonfire,
+                NodeType.Dismantle
+            };
+            return possibleOutcomes[Random.Range(0, possibleOutcomes.Length)];
+        }
+
         private void OnAnySceneUnloaded(Scene unloadedScene)
         {
             if (unloadedScene.name != _pendingSceneName) return;
             _pendingSceneName = null;
 
-            // A lost fight fragments progress back to Grade I, Page 1 -
+            // Any node that caused defeat (Combat HP 0, Archive's Ambition
+            // failure, etc.) fragments progress back to Grade I, Page 1 -
             // GameState.ApplyFragmentation (via RunManager.HandleDefeat)
             // already reset currentEchelon/currentPage, so just regenerate.
-            if (unloadedScene.name == combatSceneName && !CombatNodeContext.LastFightWasVictory)
+            if (CombatNodeContext.LastNodeCausedDefeat)
             {
+                CombatNodeContext.LastNodeCausedDefeat = false;
                 Debug.Log("[MapController] Defeat - Fragmentation. Returning to Grade I, Page 1.");
                 GenerateAndRenderPage(1);
                 return;

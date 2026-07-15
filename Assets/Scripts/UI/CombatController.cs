@@ -553,6 +553,7 @@ namespace Rollrate.UI
                 Debug.Log("[CombatController] DEFEAT! Player HP reached 0 - Fragmentation.");
                 RunManager.Instance.HandleDefeat();
                 Rollrate.Core.CombatNodeContext.LastFightWasVictory = false;
+                Rollrate.Core.CombatNodeContext.LastNodeCausedDefeat = true;
                 Rollrate.Core.NodeSceneLoader.ExitNode("CombatScene");
             }
         }

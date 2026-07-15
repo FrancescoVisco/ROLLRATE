@@ -9,6 +9,17 @@ namespace Rollrate.Map
     /// Page 1/2/3), Grade-based caste modifiers, and the safety filters
     /// (Double Conflict, Terminal Check, Shop Adjacency).
     ///
+    /// Web complexity (max lane count, page length, and fork chance) scales
+    /// up with Grade - the max width grows organically per Grade, while
+    /// the path length (body column count) is a fixed value per Grade
+    /// (3/4/5/6/7), guaranteeing a lower Grade's page can never be as long
+    /// as a higher one's. WITHIN a single Page, the actual width per
+    /// column varies organically column-to-column (Inscryption-style:
+    /// narrows, widens, narrows again) via a random walk, rather than
+    /// staying at a constant row count - the web is only guaranteed to
+    /// touch the Grade's max width SOMEWHERE in the page, not necessarily
+    /// right before the exit, and never starts already at max width.
+    ///
     /// SIMPLIFICATIONS (documented, not silent):
     /// - "Bivi" (fork) percentage governs whether a node connects to 1 or 2
     ///   nodes in the next column; connectivity is guaranteed (no orphaned
@@ -24,8 +35,27 @@ namespace Rollrate.Map
     /// </summary>
     public static class MapGenerator
     {
-        public static int BodyColumnCount = 4;
-        public static int RowsPerColumn = 3;
+        /// <summary>
+        /// Web complexity scales with Grade: more lanes (rows) and slightly
+        /// longer pages (columns) at higher Grades, so the map visibly gets
+        /// more tangled as the run progresses. Index 0 = Grade I ... 4 = Grade V.
+        /// </summary>
+        private static readonly int[] RowsPerGradeTable = { 2, 3, 3, 4, 4 };
+
+        /// <summary>
+        /// Path length (body columns) grows with Grade via a fixed value
+        /// per Grade (not a range) - simplest way to guarantee a lower
+        /// Grade can never be as long as a higher one, while staying close
+        /// to the design doc's original "3-4 columns" baseline. Organic
+        /// variety still comes from the per-column WIDTH random walk.
+        /// </summary>
+        private static readonly int[] BodyColumnsPerGrade = { 3, 4, 5, 6, 7 };
+
+        /// <summary>Additive bonus to the page's base fork chance, per Grade - higher Grades branch more often on top of the Page 1/2/3 base rate.</summary>
+        private static readonly float[] ForkChanceBonusPerGrade = { 0f, 0.05f, 0.10f, 0.15f, 0.20f };
+
+        private static int GetRowsForGrade(int grade) => RowsPerGradeTable[Mathf.Clamp(grade - 1, 0, 4)];
+        private static int GetBodyColumnsForGrade(int grade) => BodyColumnsPerGrade[Mathf.Clamp(grade - 1, 0, 4)];
 
         /// <summary>Base percentages per node type, for P1/P2/P3 (index 0/1/2). Must sum to 100 per page.</summary>
         private static readonly Dictionary<NodeType, float[]> BasePercentages = new()
@@ -45,16 +75,22 @@ namespace Rollrate.Map
         public static MapPage GeneratePage(int pageNumber, int grade)
         {
             var page = new MapPage { pageNumber = pageNumber };
+            int bodyColumnCount = GetBodyColumnsForGrade(grade);
+            int maxWidth = GetRowsForGrade(grade);
+            int[] widths = GenerateWidthSequence(bodyColumnCount, maxWidth);
 
             // --- Column 0: Entry (single node, no gameplay content, never clickable) ---
             var entryColumn = new List<MapNode> { new MapNode { page = pageNumber, column = 0, row = 0, type = NodeType.Entry } };
             page.columns.Add(entryColumn);
 
-            // --- Body columns ---
-            for (int c = 1; c <= BodyColumnCount; c++)
+            // --- Body columns - width varies organically column-to-column
+            // (Inscryption-style: narrows, widens, narrows again) rather
+            // than staying at a constant row count for the whole Page. ---
+            for (int c = 1; c <= bodyColumnCount; c++)
             {
                 var column = new List<MapNode>();
-                for (int r = 0; r < RowsPerColumn; r++)
+                int rowsThisColumn = widths[c - 1];
+                for (int r = 0; r < rowsThisColumn; r++)
                 {
                     NodeType type = RollNodeType(pageNumber, grade);
                     column.Add(new MapNode { page = pageNumber, column = c, row = r, type = type });
@@ -66,15 +102,71 @@ namespace Rollrate.Map
             // --- Exit column: forced Terminal on Page 3, forced Overload
             // (Elite) on Pages 1-2 - each Page culminates in an escalating
             // challenge before advancing, rather than a random roll. ---
-            int exitColumnIndex = BodyColumnCount + 1;
+            int exitColumnIndex = bodyColumnCount + 1;
             NodeType exitType = pageNumber == 3 ? NodeType.Terminal : NodeType.Overload;
             var exitColumn = new List<MapNode> { new MapNode { page = pageNumber, column = exitColumnIndex, row = 0, type = exitType } };
             page.columns.Add(exitColumn);
 
-            GenerateConnections(page, pageNumber);
+            GenerateConnections(page, pageNumber, grade);
             ApplyShopAdjacencyFilter(page, pageNumber, grade);
 
             return page;
+        }
+
+        /// <summary>
+        /// Organic width-per-column sequence: starts somewhere between 1
+        /// and the Grade's max width (not always maxed out), then random-
+        /// walks by -1/0/+1 each column (narrowing and widening unevenly,
+        /// Inscryption-style). Never lets a single-node (width 1) stretch
+        /// run longer than 2 columns in a row. The web is guaranteed to
+        /// touch the Grade's max width SOMEWHERE in the page - not
+        /// necessarily at the end - so every page shows its full potential
+        /// complexity at least once, wherever the walk happens to peak.
+        /// </summary>
+        private static int[] GenerateWidthSequence(int columnCount, int maxWidth)
+        {
+            var widths = new int[columnCount];
+            widths[0] = Random.Range(1, maxWidth); // exclusive of maxWidth - never starts already at full width
+
+            for (int i = 1; i < columnCount; i++)
+            {
+                int step = Random.Range(-1, 2); // -1, 0, or +1
+                widths[i] = Mathf.Clamp(widths[i - 1] + step, 1, maxWidth);
+            }
+
+            // Never more than 2 consecutive single-node columns in a row -
+            // break up any longer stretch by forcing a widen.
+            int consecutiveSingles = 0;
+            for (int i = 0; i < columnCount; i++)
+            {
+                if (widths[i] == 1)
+                {
+                    consecutiveSingles++;
+                    if (consecutiveSingles > 2)
+                    {
+                        widths[i] = Mathf.Min(maxWidth, 2);
+                        consecutiveSingles = 0;
+                    }
+                }
+                else
+                {
+                    consecutiveSingles = 0;
+                }
+            }
+
+            bool reachedMax = false;
+            foreach (int w in widths)
+            {
+                if (w == maxWidth) { reachedMax = true; break; }
+            }
+
+            if (!reachedMax)
+            {
+                int peakColumn = Random.Range(0, columnCount);
+                widths[peakColumn] = maxWidth;
+            }
+
+            return widths;
         }
 
         private static NodeType RollNodeType(int pageNumber, int grade)
@@ -136,9 +228,11 @@ namespace Rollrate.Map
         }
 
         /// <summary>Connects each node to 1 or 2 nodes in the next column ("Bivi"), guaranteeing every node has at least one incoming connection.</summary>
-        private static void GenerateConnections(MapPage page, int pageNumber)
+        private static void GenerateConnections(MapPage page, int pageNumber, int grade)
         {
-            float forkChance = ForkChance[Mathf.Clamp(pageNumber - 1, 0, 2)];
+            float baseForkChance = ForkChance[Mathf.Clamp(pageNumber - 1, 0, 2)];
+            float gradeBonus = ForkChanceBonusPerGrade[Mathf.Clamp(grade - 1, 0, 4)];
+            float forkChance = Mathf.Clamp01(baseForkChance + gradeBonus);
 
             for (int c = 0; c < page.columns.Count - 1; c++)
             {

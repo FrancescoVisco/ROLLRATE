@@ -23,9 +23,13 @@ namespace Rollrate.Map
         [SerializeField] private Transform linesContainer;
         [SerializeField] private GameObject nodeButtonPrefab;
         [SerializeField] private GameObject connectionLinePrefab; // a plain Image, stretched/rotated between 2 points
+        [Tooltip("Maximum column spacing - shrinks automatically if the page has too many columns to fit the container at this spacing.")]
         [SerializeField] private float columnSpacing = 220f;
+        [Tooltip("Maximum row spacing - shrinks automatically if the widest column has too many rows to fit the container at this spacing.")]
         [SerializeField] private float rowSpacing = 160f;
         [SerializeField] private float lineThickness = 4f;
+        [Tooltip("Visual size of one node button - subtracted from the container's available space before computing spacing, so edge nodes don't visually overflow past the container even when their CENTER is correctly positioned inside it.")]
+        [SerializeField] private Vector2 nodeVisualSize = new Vector2(100f, 100f);
 
         [Header("Node Type -> Scene mapping (leave blank for 'not yet wired')")]
         [SerializeField] private string merchantSceneName = "ShopScene";
@@ -52,6 +56,16 @@ namespace Rollrate.Map
             }
 
             SceneManager.sceneUnloaded += OnAnySceneUnloaded;
+
+            // A stretch-anchored NodesContainer's rect.width/height isn't
+            // reliably finalized on the very first frame - wait one frame
+            // so the layout has settled before reading it for spacing math.
+            StartCoroutine(GenerateFirstPageNextFrame());
+        }
+
+        private System.Collections.IEnumerator GenerateFirstPageNextFrame()
+        {
+            yield return null;
             GenerateAndRenderPage(RunManager.Instance.State.currentPage);
         }
 
@@ -79,18 +93,50 @@ namespace Rollrate.Map
             _spawnedVisuals.Clear();
             _buttonsByNode.Clear();
 
+            // Compute how many columns/rows this Page actually needs, then
+            // shrink the spacing (never grow it beyond the serialized
+            // values) so the whole page always fits inside the container's
+            // actual size - Grade V pages (up to 7 columns) would otherwise
+            // overflow a container sized for Grade I's 3 columns.
+            var containerRect = nodesContainer as RectTransform;
+            int totalColumns = _currentPage.columns.Count;
+            int maxRows = 1;
+            foreach (var col in _currentPage.columns) maxRows = Mathf.Max(maxRows, col.Count);
+
+            float effectiveColumnSpacing = columnSpacing;
+            float effectiveRowSpacing = rowSpacing;
+
+            if (containerRect != null && containerRect.rect.width > 1f && containerRect.rect.height > 1f)
+            {
+                // Subtract the node's own size first - otherwise we're only
+                // guaranteeing node CENTERS stay inside the container, and
+                // the edge nodes' visual bounds still poke out past it by
+                // roughly half their width/height.
+                float usableWidth = Mathf.Max(0f, containerRect.rect.width - nodeVisualSize.x);
+                float usableHeight = Mathf.Max(0f, containerRect.rect.height - nodeVisualSize.y);
+
+                if (totalColumns > 1)
+                {
+                    effectiveColumnSpacing = Mathf.Min(columnSpacing, usableWidth / (totalColumns - 1));
+                }
+                if (maxRows > 1)
+                {
+                    effectiveRowSpacing = Mathf.Min(rowSpacing, usableHeight / (maxRows - 1));
+                }
+            }
+
             var positions = new Dictionary<MapNode, Vector2>();
-            float totalWidth = (_currentPage.columns.Count - 1) * columnSpacing;
+            float totalWidth = (_currentPage.columns.Count - 1) * effectiveColumnSpacing;
 
             for (int c = 0; c < _currentPage.columns.Count; c++)
             {
                 var column = _currentPage.columns[c];
-                float totalHeight = (column.Count - 1) * rowSpacing;
+                float totalHeight = (column.Count - 1) * effectiveRowSpacing;
 
                 for (int r = 0; r < column.Count; r++)
                 {
                     MapNode node = column[r];
-                    Vector2 pos = new Vector2(-totalWidth / 2f + c * columnSpacing, -totalHeight / 2f + r * rowSpacing);
+                    Vector2 pos = new Vector2(-totalWidth / 2f + c * effectiveColumnSpacing, -totalHeight / 2f + r * effectiveRowSpacing);
                     positions[node] = pos;
 
                     GameObject buttonGO = Instantiate(nodeButtonPrefab, nodesContainer);

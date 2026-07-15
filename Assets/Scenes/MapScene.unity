@@ -896,18 +896,15 @@ MonoBehaviour:
   startingHp: 10
   handSize: 6
   debugStartingPool:
-  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
-  - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
-  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
-  - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
-  - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
-  - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
-  - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
-  - {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
   debugPowerModule: {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
   debugStabilityModule: {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
   debugFlowModule: {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
   debugEchoModule: {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+  debugStartingEchelon: 1
 --- !u!1 &2005808042
 GameObject:
   m_ObjectHideFlags: 0
@@ -957,8 +954,9 @@ MonoBehaviour:
   nodeButtonPrefab: {fileID: 2510496046242653760, guid: 88b9703c0849ecb42a1ef0edd524b325, type: 3}
   connectionLinePrefab: {fileID: 2510496046242653760, guid: 49b86ef3058caef4a822fa161df99b68, type: 3}
   columnSpacing: 300
-  rowSpacing: 300
+  rowSpacing: 225
   lineThickness: 10
+  nodeVisualSize: {x: 200, y: 200}
   merchantSceneName: ShopScene
   bonfireSceneName: RestScene
   dismantleSceneName: DismantleScene

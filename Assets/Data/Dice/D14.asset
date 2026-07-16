@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: D14
   faces: 14
-  grade: 1
+  grade: 3
   lowMax: 5
   highMin: 10
   dieSprite: {fileID: 0}

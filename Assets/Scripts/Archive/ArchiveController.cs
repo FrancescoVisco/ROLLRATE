@@ -186,7 +186,7 @@ namespace Rollrate.Archive
                 }
                 else
                 {
-                    GradeOfferPool higherGradePool = offerPools.GetForGrade(grade + 1);
+                    GradeOfferPool higherGradePool = offerPools.GetForGradeWithUnlocks(grade + 1);
                     if (higherGradePool.dice.Length > 0)
                     {
                         DieData bonusDie = higherGradePool.dice[Random.Range(0, higherGradePool.dice.Length)];
@@ -209,8 +209,7 @@ namespace Rollrate.Archive
 
                 if (state.IsDefeated)
                 {
-                    RunManager.Instance.HandleDefeat();
-                    CombatNodeContext.LastNodeCausedDefeat = true;
+                    RunManager.Instance.HandleDefeat(); // now performs the full scene transition to Meta itself
                     LastResultSummary += " I PV sono arrivati a 0 - Frammentazione.";
                 }
             }

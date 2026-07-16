@@ -545,16 +545,12 @@ namespace Rollrate.UI
             if (enemyController != null && enemyController.IsDefeated)
             {
                 Debug.Log("[CombatController] VICTORY! Enemy defeated.");
-                Rollrate.Core.CombatNodeContext.LastFightWasVictory = true;
                 Rollrate.Core.NodeSceneLoader.ExitNode("CombatScene");
             }
             else if (state.IsDefeated)
             {
                 Debug.Log("[CombatController] DEFEAT! Player HP reached 0 - Fragmentation.");
-                RunManager.Instance.HandleDefeat();
-                Rollrate.Core.CombatNodeContext.LastFightWasVictory = false;
-                Rollrate.Core.CombatNodeContext.LastNodeCausedDefeat = true;
-                Rollrate.Core.NodeSceneLoader.ExitNode("CombatScene");
+                RunManager.Instance.HandleDefeat(); // now performs the full scene transition to Meta itself
             }
         }
 

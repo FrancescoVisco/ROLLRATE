@@ -26,12 +26,20 @@ namespace Rollrate.Archive
 
         private void Start()
         {
-            // Leave must always work, even if something else below fails.
-            if (leaveButton != null) leaveButton.onClick.AddListener(OnLeaveClicked);
+            // Leave is deliberately locked until the Test resolves (you
+            // can't flee an Archive Test) - the listener is still wired
+            // now so it's ready the moment it gets re-enabled.
+            if (leaveButton != null)
+            {
+                leaveButton.onClick.AddListener(OnLeaveClicked);
+                leaveButton.interactable = false;
+            }
 
             if (RunManager.Instance == null)
             {
                 Debug.LogError("[ArchiveUI] RunManager.Instance is null - load this scene additively via the Map, not by pressing Play directly on it.");
+                // Fallback: don't leave the scene in a dead-end state if setup itself failed.
+                if (leaveButton != null) leaveButton.interactable = true;
                 return;
             }
 
@@ -61,6 +69,7 @@ namespace Rollrate.Archive
             if (rollText != null) rollText.text = controller.LastRollSummary;
             if (resultText != null) resultText.text = controller.LastResultSummary;
             if (rollButton != null) rollButton.interactable = false;
+            if (leaveButton != null) leaveButton.interactable = true;
         }
 
         private void OnLeaveClicked()

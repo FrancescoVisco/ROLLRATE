@@ -248,7 +248,7 @@ namespace Rollrate.Shop
         private void GenerateOffers()
         {
             var state = RunManager.Instance.State;
-            GradeOfferPool gradePool = offerPools.GetForGrade(state.currentEchelon);
+            GradeOfferPool gradePool = offerPools.GetForGradeWithUnlocks(state.currentEchelon);
 
             ModuleData[] allGradeModules = gradePool.modules ?? new ModuleData[0];
             DieData[] availableDice = gradePool.dice ?? new DieData[0];

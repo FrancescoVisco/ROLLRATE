@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Rollrate.Data;
+using Rollrate.Meta;
 
 namespace Rollrate.Shop
 {
@@ -46,6 +49,46 @@ namespace Rollrate.Shop
                 case 4: return gradeIV;
                 default: return gradeV;
             }
+        }
+
+        /// <summary>
+        /// Same as GetForGrade, but also folds in any module/die from a
+        /// HIGHER Grade's pool that the player has permanently unlocked to
+        /// appear earlier via Frammenti Residui (Meta-progressione,
+        /// design doc Section 7-8). Use this instead of GetForGrade
+        /// wherever the Shop/Archive actually builds a live offer board.
+        /// </summary>
+        public GradeOfferPool GetForGradeWithUnlocks(int currentEchelon)
+        {
+            var basePool = GetForGrade(currentEchelon);
+            var combinedDice = new List<DieData>(basePool.dice);
+            var combinedModules = new List<ModuleData>(basePool.modules);
+
+            foreach (GradeOfferPool pool in new[] { gradeI, gradeII, gradeIII, gradeIV, gradeV })
+            {
+                foreach (DieData die in pool.dice)
+                {
+                    if (die == null || die.grade <= currentEchelon) continue; // natural or already in basePool
+                    if (MetaProgressionManager.GetEffectiveGrade(die.name, die.grade) <= currentEchelon)
+                    {
+                        combinedDice.Add(die);
+                    }
+                }
+                foreach (ModuleData module in pool.modules)
+                {
+                    if (module == null || module.grade <= currentEchelon) continue;
+                    if (MetaProgressionManager.GetEffectiveGrade(module.name, module.grade) <= currentEchelon)
+                    {
+                        combinedModules.Add(module);
+                    }
+                }
+            }
+
+            return new GradeOfferPool
+            {
+                dice = combinedDice.Distinct().ToArray(),
+                modules = combinedModules.Distinct().ToArray()
+            };
         }
     }
 }

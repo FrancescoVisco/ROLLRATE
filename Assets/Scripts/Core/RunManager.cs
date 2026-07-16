@@ -113,10 +113,16 @@ namespace Rollrate.Core
         /// rule (Core Die level + Scrap persist, everything else resets) and
         /// sends the player back to Echelon I.
         /// </summary>
+        [Header("Meta Transition")]
+        [Tooltip("Scene loaded (full load, replacing everything) after Defeat or Run Completion, so the player can spend Frammenti Residui before starting again.")]
+        [SerializeField] private string metaSceneName = "MetaScene";
+
         public void HandleDefeat()
         {
             Debug.Log($"[RunManager] Defeat. Fragmenting. Core stays at {State.coreDie?.displayName}, Scrap kept: {State.scrap}");
+            Rollrate.Meta.MetaProgressionManager.AwardForDefeat(State.currentEchelon);
             State.ApplyFragmentation(startingHp);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(metaSceneName);
         }
     }
 }

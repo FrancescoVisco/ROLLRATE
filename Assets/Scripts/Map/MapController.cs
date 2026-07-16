@@ -36,6 +36,7 @@ namespace Rollrate.Map
         [SerializeField] private string bonfireSceneName = "RestNodeScene";
         [SerializeField] private string dismantleSceneName = "DismantleScene";
         [SerializeField] private string combatSceneName = "CombatScene";
+        [SerializeField] private string metaSceneName = "MetaScene";
         [SerializeField] private string archiveSceneName = "ArchiveScene";
 
         [Header("Combat Node Setup")]
@@ -305,17 +306,9 @@ namespace Rollrate.Map
             if (unloadedScene.name != _pendingSceneName) return;
             _pendingSceneName = null;
 
-            // Any node that caused defeat (Combat HP 0, Archive's Ambition
-            // failure, etc.) fragments progress back to Grade I, Page 1 -
-            // GameState.ApplyFragmentation (via RunManager.HandleDefeat)
-            // already reset currentEchelon/currentPage, so just regenerate.
-            if (CombatNodeContext.LastNodeCausedDefeat)
-            {
-                CombatNodeContext.LastNodeCausedDefeat = false;
-                Debug.Log("[MapController] Defeat - Fragmentation. Returning to Grade I, Page 1.");
-                GenerateAndRenderPage(1);
-                return;
-            }
+            // Note: Defeat no longer regenerates Page 1 here - HandleDefeat()
+            // performs a full scene transition to Meta directly, which
+            // destroys this MapController along with everything else.
 
             // Reached the end of this Page - generate the next one.
             if (_currentNode.column == _currentPage.columns.Count - 1)
@@ -371,7 +364,9 @@ namespace Rollrate.Map
             }
             else
             {
-                Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! (schermata di fine run non ancora implementata)");
+                Rollrate.Meta.MetaProgressionManager.AwardForRunComplete();
+                Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! Verso la schermata Meta.");
+                SceneManager.LoadScene(metaSceneName);
             }
         }
     }

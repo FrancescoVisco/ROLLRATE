@@ -45,6 +45,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 34bda027a38e8834ea30aabea609da09, type: 2}
   gradeIII:
     dice:
+    - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
     - {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
     modules:
     - {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
@@ -61,7 +62,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 34bda027a38e8834ea30aabea609da09, type: 2}
   gradeIV:
     dice:
-    - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
+    - {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
     - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
     - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
     modules:

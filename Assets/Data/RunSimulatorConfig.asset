@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2daed961c0d122a4db807fe875e997f1, type: 3}
+  m_Name: RunSimulatorConfig
+  m_EditorClassIdentifier: 
+  startingCoreDie: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  startingHp: 10
+  startingPool:
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+  enemyRegistry: {fileID: 11400000, guid: e38c3b7416267e44cb4f9b1cc00d0ea6, type: 2}
+  offerPools: {fileID: 11400000, guid: 6621cb9be382d414685f2998c8a0dbb1, type: 2}
+  costTable: {fileID: 11400000, guid: 74050c8c509bf6843944fba1e5a74f17, type: 2}
+  archiveTestTable: {fileID: 11400000, guid: d00cf91dac0cb0c4983a9c0bacd3f0ff, type: 2}
+  dismantleRewardTable: {fileID: 11400000, guid: b27dfb98b1bc809499484e97a7e71365, type: 2}
+  startingPowerModule: {fileID: 11400000, guid: c1363dfa81e2fbb49baaa73f4f00e86a, type: 2}
+  startingStabilityModule: {fileID: 11400000, guid: 9a838a243df256842bc252c642264ff9, type: 2}
+  startingFlowModule: {fileID: 11400000, guid: 539df7baef8eb574e81d1470e7fe0d24, type: 2}
+  startingEchoModule: {fileID: 11400000, guid: 3ba6f113ec503f944976c504ff37c3c2, type: 2}
+  maxRunsPerCampaign: 200
+  maxTurnsPerFight: 50

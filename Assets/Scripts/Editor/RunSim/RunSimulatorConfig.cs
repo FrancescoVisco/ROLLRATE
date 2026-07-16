@@ -15,6 +15,8 @@ namespace Rollrate.Simulation
         public DieData startingCoreDie; // assign the D4 asset
         public int startingHp = 10;
         public DieData[] startingPool; // mirrors RunManager's debugStartingPool
+        [Tooltip("Mirrors RunManager.HandSize - how many dice are drawn from the Draw Pile each turn.")]
+        public int handSize = 6;
 
         [Header("Data (same assets the real game uses)")]
         public EnemyRegistry enemyRegistry;

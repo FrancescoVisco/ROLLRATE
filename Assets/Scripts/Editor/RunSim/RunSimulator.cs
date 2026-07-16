@@ -33,8 +33,10 @@ namespace Rollrate.Simulation
     ///   (highest die -> Power/Stability/Flow/Echo priority order, lowest-
     ///   value Second Chance rerolls, lowest-other-die Mirror/Shift/Reverse
     ///   targeting).
-    /// - Every turn rolls the ENTIRE dicePool (not a drawn 6-hand) - same
-    ///   simplification as the combat-only simulator.
+    /// - Every turn draws an actual Hand from the Draw Pile (reshuffling
+    ///   the Discard Pile in automatically), same mechanic as the real
+    ///   game - not a simplification, this is faithful to GameState's own
+    ///   InitializeDeckForFight/DrawHand/DiscardHand.
     /// - Shop buying: prioritizes an empty-slot module first, then dice,
     ///   then spare modules, buying anything affordable until Scrap runs low.
     /// - Dismantle: dismantles a spare die whenever the pool exceeds 6, and
@@ -51,6 +53,8 @@ namespace Rollrate.Simulation
         public static RunSimStats SimulateCampaigns(RunSimulatorConfig config, int campaignCount, Action<string> logProgress = null)
         {
             var stats = new RunSimStats();
+            CollectAllKnownModules(config, stats);
+
             for (int i = 0; i < campaignCount; i++)
             {
                 SimulateOneCampaign(config, stats);
@@ -62,23 +66,47 @@ namespace Rollrate.Simulation
             return stats;
         }
 
+        private static void CollectAllKnownModules(RunSimulatorConfig config, RunSimStats stats)
+        {
+            if (config.offerPools == null) return;
+            var pools = new[] { config.offerPools.gradeI, config.offerPools.gradeII, config.offerPools.gradeIII, config.offerPools.gradeIV, config.offerPools.gradeV };
+            foreach (var pool in pools)
+            {
+                foreach (ModuleData m in pool.modules)
+                {
+                    if (m != null) stats.AllKnownModules.Add(m.displayName);
+                }
+            }
+        }
+
         private static void SimulateOneCampaign(RunSimulatorConfig config, RunSimStats stats)
         {
             var simMeta = new SimMetaState();
             int runs = 0;
             bool victory = false;
+            string finalCoreDieName = config.startingCoreDie != null ? config.startingCoreDie.displayName : "?";
 
             while (!victory && runs < config.maxRunsPerCampaign)
             {
                 runs++;
-                victory = SimulateOneRun(config, simMeta, stats);
+                victory = SimulateOneRun(config, simMeta, stats, out finalCoreDieName);
+                if (!victory) ResolveMetaVisit(config, simMeta, stats);
             }
 
-            if (!victory) stats.AbandonedCampaigns++;
-            stats.RunsPerCampaign.Add(runs);
+            stats.TotalCampaigns++;
+            stats.RecordCoreGradeAtCampaignEnd(finalCoreDieName);
+            if (victory)
+            {
+                stats.Victories++;
+                stats.RunsPerCampaign.Add(runs);
+            }
+            else
+            {
+                stats.AbandonedCampaigns++;
+            }
         }
 
-        private static bool SimulateOneRun(RunSimulatorConfig config, SimMetaState simMeta, RunSimStats stats)
+        private static bool SimulateOneRun(RunSimulatorConfig config, SimMetaState simMeta, RunSimStats stats, out string finalCoreDieName)
         {
             var state = new GameState();
             state.ResetForNewRun(config.startingCoreDie, config.startingHp);
@@ -102,6 +130,8 @@ namespace Rollrate.Simulation
 
             try
             {
+                int nodesResolved = 0;
+
                 while (true)
                 {
                     MapPage page = MapGenerator.GeneratePage(state.currentPage, state.currentEchelon);
@@ -129,23 +159,46 @@ namespace Rollrate.Simulation
 
                         if (fightTier.HasValue)
                         {
-                            if (!ResolveFight(config, state, enemyController, fightTier.Value, stats)) return false; // died
+                            if (!ResolveFight(config, state, enemyController, fightTier.Value, stats))
+                            {
+                                simMeta.AwardForDefeat(state.currentEchelon);
+                                stats.ScrapAtRunEnd.Add(state.scrap);
+                                stats.NodesResolvedBeforeDeath.Add(nodesResolved);
+                                finalCoreDieName = state.coreDie.displayName;
+                                return false; // died
+                            }
                         }
                         else
                         {
                             switch (resolvedType)
                             {
                                 case NodeType.Merchant: ResolveShop(config, state, simMeta, stats); break;
-                                case NodeType.Archive: if (!ResolveArchive(config, state, stats)) return false; break;
+                                case NodeType.Archive:
+                                    if (!ResolveArchive(config, state, stats))
+                                    {
+                                        simMeta.AwardForDefeat(state.currentEchelon);
+                                        stats.ScrapAtRunEnd.Add(state.scrap);
+                                        stats.NodesResolvedBeforeDeath.Add(nodesResolved);
+                                        finalCoreDieName = state.coreDie.displayName;
+                                        return false;
+                                    }
+                                    break;
                                 case NodeType.Bonfire: ResolveBonfire(state, stats); break;
                                 case NodeType.Dismantle: ResolveDismantle(config, state, stats); break;
                             }
                         }
 
+                        nodesResolved++; // this node (fight or otherwise) was survived/resolved successfully
+
                         if (isTerminal)
                         {
                             bool wonGradeFive = ApplyRecalibration(state, simMeta);
-                            if (wonGradeFive) return true; // VICTORY
+                            if (wonGradeFive)
+                            {
+                                stats.ScrapAtRunEnd.Add(state.scrap);
+                                finalCoreDieName = state.coreDie.displayName;
+                                return true; // VICTORY
+                            }
                             advancedGradeViaTerminal = true;
                             break;
                         }
@@ -210,7 +263,22 @@ namespace Rollrate.Simulation
             }
 
             enemyController.StartFight(enemy);
-            return SimulateFightToCompletion(state, enemyController, config.maxTurnsPerFight);
+            state.InitializeDeckForFight(); // fresh shuffled Draw Pile from dicePool, empty Discard - EnemyController.StartFight only does this itself via RunManager.Instance, which doesn't exist here
+            bool won = SimulateFightToCompletion(state, enemyController, config.maxTurnsPerFight, config.handSize, out int turnsTaken, stats);
+
+            if (won)
+            {
+                stats.TotalTurnsInWonFights += turnsTaken;
+                stats.WonFightsCount++;
+            }
+            else
+            {
+                stats.RecordDeathByGrade(state.currentEchelon);
+                stats.RecordDeathByEnemy(enemy.displayName);
+                stats.DeathsFromCombat++;
+            }
+
+            return won;
         }
 
         private static void ResolveShop(RunSimulatorConfig config, GameState state, SimMetaState simMeta, RunSimStats stats)
@@ -239,13 +307,66 @@ namespace Rollrate.Simulation
                 if (state.scrap < cost) continue;
 
                 bool slotEmpty = !state.installedModules.ContainsKey(module.slot) || state.installedModules[module.slot] == null;
-                // Buy if the slot is empty (fills a gap) or we can still comfortably afford it afterward.
-                if (slotEmpty || state.scrap >= cost * 2)
+                // Buy if the slot is empty (fills a gap) or we can still afford it.
+                if (slotEmpty || state.scrap >= cost)
                 {
                     state.scrap -= cost;
                     state.AddOwnedModule(module);
-                    if (slotEmpty) state.EquipModule(module);
                     stats.RecordPurchase($"{module.displayName} ({module.slot})");
+
+                    if (slotEmpty)
+                    {
+                        state.EquipModule(module);
+                    }
+                    else if (UnityEngine.Random.value < 0.5f)
+                    {
+                        // Heuristic: an engaged player often swaps in a
+                        // freshly bought upgrade right away, not just at
+                        // the next Bonfire visit.
+                        state.EquipModule(module);
+                        stats.CollectionSwapCount++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Heuristic Meta visit, simulated after every Defeat within a
+        /// campaign (mirrors the real game's automatic transition to
+        /// MetaScene): spends available Frammenti Residui on random early
+        /// unlocks until funds run out, rather than never spending them.
+        /// </summary>
+        private static void ResolveMetaVisit(RunSimulatorConfig config, SimMetaState simMeta, RunSimStats stats)
+        {
+            if (config.offerPools == null) return;
+
+            var candidates = new List<(string key, string display, int grade)>();
+            var pools = new[] { config.offerPools.gradeI, config.offerPools.gradeII, config.offerPools.gradeIII, config.offerPools.gradeIV, config.offerPools.gradeV };
+            var seenDice = new HashSet<DieData>();
+            var seenModules = new HashSet<ModuleData>();
+
+            foreach (var pool in pools)
+            {
+                foreach (DieData d in pool.dice)
+                {
+                    if (d == null || d.grade <= 1 || !seenDice.Add(d)) continue;
+                    candidates.Add((d.name, d.displayName, d.grade));
+                }
+                foreach (ModuleData m in pool.modules)
+                {
+                    if (m == null || m.grade <= 1 || !seenModules.Add(m)) continue;
+                    candidates.Add((m.name, $"{m.displayName} ({m.slot})", m.grade));
+                }
+            }
+
+            int safety = 0;
+            while (simMeta.ResidualFragments >= 20 && candidates.Count > 0 && safety < 50)
+            {
+                safety++;
+                var pick = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+                if (simMeta.TryUnlockOneGradeEarlier(pick.key, pick.grade))
+                {
+                    stats.RecordMetaUnlock(pick.display);
                 }
             }
         }
@@ -346,7 +467,12 @@ namespace Rollrate.Simulation
                 {
                     int hpLoss = Mathf.CeilToInt(state.maxHp * 0.2f);
                     state.currentHp = Mathf.Max(0, state.currentHp - hpLoss);
-                    if (state.IsDefeated) return false; // Ambizione killed the player
+                    if (state.IsDefeated)
+                    {
+                        stats.RecordDeathByGrade(state.currentEchelon);
+                        stats.DeathsFromAmbizione++;
+                        return false; // Ambizione killed the player
+                    }
                 }
             }
 
@@ -411,7 +537,7 @@ namespace Rollrate.Simulation
         // that it operates on a PERSISTING GameState (HP/Scrap/pool carry
         // over between fights within a run) instead of resetting them.
         // ------------------------------------------------------------------
-        private static bool SimulateFightToCompletion(GameState state, EnemyController enemyController, int maxTurns)
+        private static bool SimulateFightToCompletion(GameState state, EnemyController enemyController, int maxTurns, int handSize, out int turnsTaken, RunSimStats stats)
         {
             int turn = 0;
             while (turn < maxTurns)
@@ -421,8 +547,13 @@ namespace Rollrate.Simulation
                 int coreValue = UnityEngine.Random.Range(1, state.coreDie.faces + 1);
                 enemyController.RollInhibitor();
 
+                // Draw an actual Hand from the Draw Pile (reshuffling the
+                // Discard Pile in automatically if needed) - same mechanic
+                // as the real game, instead of rolling the entire pool.
+                List<DieData> drawnHand = state.DrawHand(handSize);
+
                 var hand = new List<(DieData type, int value)>();
-                foreach (DieData die in state.dicePool)
+                foreach (DieData die in drawnHand)
                 {
                     hand.Add((die, UnityEngine.Random.Range(1, die.faces + 1)));
                 }
@@ -535,6 +666,9 @@ namespace Rollrate.Simulation
                 bool fullResonance = ResonanceDetector.DetectFullResonance(placedValues, ctx.CoreValue);
                 ctx.FullResonanceActive = fullResonance;
 
+                stats.TotalTurnsAllFights++;
+                if (fullResonance) stats.FullResonanceTurnsAllFights++;
+
                 int effectiveThreshold = enemyController.GetEffectiveThreshold(abilityCtx);
 
                 int powerDieBonus = state.pendingNextTurnPowerBonus;
@@ -586,12 +720,14 @@ namespace Rollrate.Simulation
                 }
 
                 enemyController.NotifyTurnEnd(abilityCtx);
+                state.DiscardHand(drawnHand); // same dice types drawn this turn, placed or not - matches DiceRoller.DiscardCurrentHand()
 
-                if (enemyController.IsDefeated) return true;
-                if (state.IsDefeated) return false;
+                if (enemyController.IsDefeated) { turnsTaken = turn; return true; }
+                if (state.IsDefeated) { turnsTaken = turn; return false; }
             }
 
             // Timed out - treat as a loss for run-progression purposes (shouldn't normally trigger).
+            turnsTaken = turn;
             return false;
         }
 

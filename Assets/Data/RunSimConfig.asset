@@ -12,20 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdda7cdef498a2e4fa78e82040525ba4, type: 3}
   m_Name: RunSimConfig
   m_EditorClassIdentifier: 
-  startingCoreDie: {fileID: 0}
+  startingCoreDie: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
   startingHp: 10
   handSize: 6
-  startingPool: []
-  enemyRegistry: {fileID: 0}
-  effectRegistry: {fileID: 0}
-  shopCostTable: {fileID: 0}
-  archiveTestTable: {fileID: 0}
+  startingPool:
+  - data: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    type: 0
+  - data: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    type: 1
+  - data: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    type: 2
+  - data: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    type: 3
+  enemyRegistry: {fileID: 11400000, guid: e38c3b7416267e44cb4f9b1cc00d0ea6, type: 2}
+  effectRegistry: {fileID: 11400000, guid: 93c3835f7a9a9e143b9e39eec2a62d2f, type: 2}
+  shopCostTable: {fileID: 11400000, guid: 74050c8c509bf6843944fba1e5a74f17, type: 2}
+  archiveTestTable: {fileID: 11400000, guid: d00cf91dac0cb0c4983a9c0bacd3f0ff, type: 2}
   dieSizeByGrade:
-  - options: []
-  - options: []
-  - options: []
-  - options: []
-  - options: []
+  - options:
+    - {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
+    - {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
+  - options:
+    - {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
+    - {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
+  - options:
+    - {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
+  - options:
+    - {fileID: 11400000, guid: cb36efa0831571b44acf69f4187c6b2d, type: 2}
+    - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
+  - options:
+    - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
   shopOfferCount: 5
   fusionCostByGrade: 1400000023000000370000005000000064000000
   maxRunsPerCampaign: 30

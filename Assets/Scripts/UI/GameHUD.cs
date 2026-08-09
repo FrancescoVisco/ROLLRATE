@@ -24,7 +24,6 @@ namespace Rollrate.UI
         [SerializeField] private TextMeshProUGUI enemyHpText;
         [SerializeField] private TextMeshProUGUI thresholdText;
         [SerializeField] private TextMeshProUGUI dicePoolCountText;
-        [SerializeField] private TextMeshProUGUI bonusDiceText; // shows a count of dice currently in Vibrazione BONUS (net multiplier > x1), hidden when zero - see ShowBonusDiceSummary
         [SerializeField] private TextMeshProUGUI statusMessageText;
         [SerializeField] private TextMeshProUGUI vibrationHandText; // shows a live summary of bonus/malus dice on the board (Vibrazione 3.0), recalculated as dice are placed - separate from statusMessageText so it never gets overwritten by targeting hints
 
@@ -81,7 +80,7 @@ namespace Rollrate.UI
 
             if (dicePoolCountText != null)
             {
-                dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count}";
+                dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count} | Draw: {state.drawPile.Count} | Discard: {state.discardPile.Count}";
             }
         }
 
@@ -116,18 +115,5 @@ namespace Rollrate.UI
             }
         }
 
-        /// <summary>
-        /// Highlights specifically how many dice currently have a
-        /// Vibrazione BONUS (net multiplier above x1) - a positive-only
-        /// subset of ShowVibrationSummary's fuller bonus/malus count.
-        /// Pass an empty string to hide it entirely (e.g. zero bonus dice).
-        /// </summary>
-        public void ShowBonusDiceSummary(string summaryText)
-        {
-            if (bonusDiceText != null)
-            {
-                bonusDiceText.text = summaryText;
-            }
-        }
     }
 }

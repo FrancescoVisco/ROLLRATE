@@ -1043,7 +1043,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fd6ba79e818e5140a15086d1a0c5b60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  newRunButton: {fileID: 439894862}
+  continueButton: {fileID: 439894862}
+  resetProgressButton: {fileID: 353119177}
   quitButton: {fileID: 1398191738}
   mapSceneName: MapScene
 --- !u!1 &1398191736

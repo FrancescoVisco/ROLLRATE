@@ -88,7 +88,6 @@ namespace Rollrate.UI
             if (doneRerollingButton != null) doneRerollingButton.interactable = false;
             RefreshStatusText();
             gameHUD?.ShowVibrationSummary(string.Empty);
-            gameHUD?.ShowBonusDiceSummary(string.Empty);
         }
 
         /// <summary>SET-UP + ROLL (design doc Section 4). Call when the player presses Roll.</summary>
@@ -146,6 +145,7 @@ namespace Rollrate.UI
             RefreshRerollsUI();
             RefreshVibrationSummary();
             RefreshLiveCombatStats();
+            gameHUD?.RefreshStats(); // Draw/Discard Pile counters just changed (DrawHand consumed from the Draw Pile)
             LogHandDiagnostics(ctx);
         }
 
@@ -365,10 +365,6 @@ namespace Rollrate.UI
             gameHUD.ShowVibrationSummary(bonusCount > 0 || malusCount > 0
                 ? $"Vibration: {bonusCount} bonus, {malusCount} malus"
                 : string.Empty);
-
-            gameHUD.ShowBonusDiceSummary(bonusCount > 0
-                ? $"+{bonusCount} dice in bonus"
-                : string.Empty);
         }
 
         /// <summary>Roll is only available before a turn starts (or after Resolve); Reroll/Resolve only while a turn is in progress.</summary>
@@ -516,7 +512,6 @@ namespace Rollrate.UI
             SetTurnButtonsState(canRoll: true, canResolve: false);
             RefreshRerollsUI(); // also disables doneRerollingButton correctly (turn is over)
             gameHUD?.ShowVibrationSummary(string.Empty);
-            gameHUD?.ShowBonusDiceSummary(string.Empty);
         }
     }
 }

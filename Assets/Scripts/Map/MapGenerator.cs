@@ -25,10 +25,6 @@ namespace Rollrate.Map
     ///   nodes in the next column; connectivity is guaranteed (no orphaned
     ///   unreachable nodes), but exact fork topology is randomized rather
     ///   than hand-authored.
-    /// - The Double Conflict Filter is applied per ROW-LANE (same row index
-    ///   across consecutive columns), not per actual graph path, since a
-    ///   branching graph can have many paths to the same node. This is a
-    ///   practical approximation of "un percorso" from the design doc.
     /// - Oscuramento (Grade IV+ fog of war) and Singolarità (Grade V forced
     ///   fight off-path) are gameplay/UI rules, not generation rules - they
     ///   belong in the Map UI / node-entry logic, not here.
@@ -95,7 +91,18 @@ namespace Rollrate.Map
                     NodeType type = RollNodeType(pageNumber, grade);
                     column.Add(new MapNode { page = pageNumber, column = c, row = r, type = type });
                 }
-                ApplyDoubleConflictFilter(page, column, pageNumber, grade);
+
+                // Regola di generazione #2 (design doc Section 7): "La pagina parte
+                // sempre con almeno un nodo conflitto tra i successivi all'ingresso" -
+                // only the FIRST body column needs this guarantee. If a single-lane
+                // column rolled anything else, it's forced to Conflict (the only
+                // node there, so it must BE the guaranteed Conflict); with multiple
+                // lanes, only one needs to become Conflict if none already are.
+                if (c == 1 && !column.Exists(n => n.type == NodeType.Conflict))
+                {
+                    column[Random.Range(0, column.Count)].type = NodeType.Conflict;
+                }
+
                 page.columns.Add(column);
             }
 
@@ -108,6 +115,7 @@ namespace Rollrate.Map
             page.columns.Add(exitColumn);
 
             GenerateConnections(page, pageNumber, grade);
+            ApplyDoubleConflictFilterOnGraph(page); // may turn a Conflict into Merchant - must run BEFORE the adjacency check below
             ApplyShopAdjacencyFilter(page, pageNumber, grade);
 
             return page;
@@ -196,37 +204,6 @@ namespace Rollrate.Map
             return NodeType.Conflict; // fallback, shouldn't normally hit
         }
 
-        /// <summary>
-        /// If the same row-lane generated 2 Conflict nodes in a row across
-        /// the previous 2 columns, this one must be rerolled as Archive
-        /// (60%) or Merchant (40%) instead - matching the design doc's
-        /// "Regola del Doppio Conflitto" (originally Archivio 60% / Manutenzione 40%,
-        /// updated here to Merchant since Manutenzione was unified into Merchant).
-        /// </summary>
-        private static void ApplyDoubleConflictFilter(MapPage page, List<MapNode> currentColumn, int pageNumber, int grade)
-        {
-            int columnIndex = currentColumn[0].column;
-            if (columnIndex < 2) return; // need at least 2 previous columns to check
-
-            for (int r = 0; r < currentColumn.Count; r++)
-            {
-                bool prevIsConflict = GetNodeAt(page, columnIndex - 1, r)?.type == NodeType.Conflict;
-                bool prevPrevIsConflict = GetNodeAt(page, columnIndex - 2, r)?.type == NodeType.Conflict;
-
-                if (currentColumn[r].type == NodeType.Conflict && prevIsConflict && prevPrevIsConflict)
-                {
-                    currentColumn[r].type = Random.value < 0.6f ? NodeType.Archive : NodeType.Merchant;
-                }
-            }
-        }
-
-        private static MapNode GetNodeAt(MapPage page, int column, int row)
-        {
-            if (column < 0 || column >= page.columns.Count) return null;
-            var col = page.columns[column];
-            return row < col.Count ? col[row] : null;
-        }
-
         /// <summary>Connects each node to 1 or 2 nodes in the next column ("Bivi"), guaranteeing every node has at least one incoming connection.</summary>
         private static void GenerateConnections(MapPage page, int pageNumber, int grade)
         {
@@ -266,6 +243,58 @@ namespace Rollrate.Map
                     {
                         MapNode randomSource = current[Random.Range(0, current.Count)];
                         randomSource.connectionsToNextColumn.Add(i);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Regola del Doppio Conflitto (design doc Section 7), applied on
+        /// the REAL connection graph, not row position: for every node,
+        /// computes the length of the longest chain of CONNECTED Conflict
+        /// nodes ending there (considering every predecessor that actually
+        /// connects to it, via connectionsToNextColumn), processing columns
+        /// left-to-right since connections only ever point forward (a DAG).
+        /// Whenever that chain reaches 3, this node is rerolled to Archive
+        /// (60%) or Merchant (40%) - breaking the chain for every path that
+        /// passes through it, not just one row-lane.
+        /// </summary>
+        private static void ApplyDoubleConflictFilterOnGraph(MapPage page)
+        {
+            var runLength = new int[page.columns.Count][];
+            for (int c = 0; c < page.columns.Count; c++) runLength[c] = new int[page.columns[c].Count];
+
+            for (int c = 0; c < page.columns.Count; c++)
+            {
+                var column = page.columns[c];
+                for (int r = 0; r < column.Count; r++)
+                {
+                    var node = column[r];
+                    if (node.type != NodeType.Conflict)
+                    {
+                        runLength[c][r] = 0;
+                        continue;
+                    }
+
+                    int longestIncomingRun = 0;
+                    if (c > 0)
+                    {
+                        var prevColumn = page.columns[c - 1];
+                        for (int pr = 0; pr < prevColumn.Count; pr++)
+                        {
+                            if (prevColumn[pr].connectionsToNextColumn.Contains(r))
+                            {
+                                longestIncomingRun = Mathf.Max(longestIncomingRun, runLength[c - 1][pr]);
+                            }
+                        }
+                    }
+
+                    runLength[c][r] = longestIncomingRun + 1;
+
+                    if (runLength[c][r] >= 3)
+                    {
+                        node.type = Random.value < 0.6f ? NodeType.Archive : NodeType.Merchant;
+                        runLength[c][r] = 0; // no longer Conflict - breaks the chain for every path through here
                     }
                 }
             }

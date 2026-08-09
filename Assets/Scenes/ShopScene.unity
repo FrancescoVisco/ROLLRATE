@@ -167,10 +167,11 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e37e88148f5ec444d8f7151b55ec0617, type: 2}
   - options:
     - {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  offerCount: 5
   scrapText: {fileID: 381769622}
   hpText: {fileID: 1559132994}
   leaveButton: {fileID: 1747594128}
-  mapSceneName: MapScene
+  shopSceneName: ShopScene
   offerPrefab: {fileID: 997977572058255309, guid: 1dd1037a373295b46a79e5a2b0d05b9e, type: 3}
   offerContainer: {fileID: 471984229}
   increaseMaxHpButton: {fileID: 2062769202}

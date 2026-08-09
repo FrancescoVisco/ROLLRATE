@@ -6,7 +6,10 @@ namespace Rollrate.Simulation
 {
     /// <summary>
     /// Accumulates every statistic requested across an arbitrary number of
-    /// simulated campaigns.
+    /// simulated campaigns. Updated for the current Dice-Type/Effects
+    /// system - no more Modules/Dismantle (removed systems), tracks
+    /// Furnace fusions and Archive Test outcomes for the actual 3 Tests
+    /// instead.
     /// </summary>
     public class RunSimStats
     {
@@ -15,16 +18,15 @@ namespace Rollrate.Simulation
         public int Victories;
         public int AbandonedCampaigns; // hit maxRunsPerCampaign without winning
 
-        public Dictionary<string, int> ShopPurchases = new Dictionary<string, int>();
-        public Dictionary<string, int> ModuleUsageCount = new Dictionary<string, int>(); // incremented once per fight the module was equipped for
-        public Dictionary<string, int> MetaUnlockPurchases = new Dictionary<string, int>();
-        public HashSet<string> AllKnownModules = new HashSet<string>(); // populated once from config, to find modules that NEVER got used
+        public Dictionary<string, int> ShopDicePurchases = new Dictionary<string, int>(); // key: "Type DFaces", e.g. "Power D8"
+        public int ShopMaxHpPurchases;
+        public int ShopRerolls;
+        public int FurnaceFusions;
+        public Dictionary<string, int> MetaUnlockPurchases = new Dictionary<string, int>(); // die kept at the Meta screen, by "Type DFaces"
 
         public int ArchiveResonanceWins, ArchiveResonanceTotal;
         public int ArchiveTributeWins, ArchiveTributeTotal;
         public int ArchiveAmbitionWins, ArchiveAmbitionTotal;
-
-        public int DismantleCount;
 
         public long TotalTurnsInWonFights;
         public int WonFightsCount;
@@ -35,7 +37,7 @@ namespace Rollrate.Simulation
         public int DeathsFromAmbizione;
         public Dictionary<string, int> DeathsByEnemyName = new Dictionary<string, int>();
 
-        // --- Full Resonance frequency across ALL real fights (not just won ones) ---
+        // --- Vibrazione bonus frequency across ALL real fights (not just won ones) ---
         public long TotalTurnsAllFights;
         public long TurnsWithVibrationBonusAllFights;
 
@@ -48,17 +50,10 @@ namespace Rollrate.Simulation
         // --- How far a run gets before dying ---
         public List<int> NodesResolvedBeforeDeath = new List<int>();
 
-        public void RecordPurchase(string itemName)
+        public void RecordDicePurchase(string itemName)
         {
-            ShopPurchases.TryGetValue(itemName, out int c);
-            ShopPurchases[itemName] = c + 1;
-        }
-
-        public void RecordModuleUsage(string moduleName)
-        {
-            if (string.IsNullOrEmpty(moduleName)) return;
-            ModuleUsageCount.TryGetValue(moduleName, out int c);
-            ModuleUsageCount[moduleName] = c + 1;
+            ShopDicePurchases.TryGetValue(itemName, out int c);
+            ShopDicePurchases[itemName] = c + 1;
         }
 
         public void RecordMetaUnlock(string itemName)
@@ -140,23 +135,15 @@ namespace Rollrate.Simulation
                 sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
 
             sb.AppendLine();
-            sb.AppendLine("--- Acquisti Shop (dado/modulo: volte comprato) ---");
-            foreach (var kvp in ShopPurchases.OrderByDescending(k => k.Value))
+            sb.AppendLine("--- Dadi comprati allo Shop (Tipo+Taglia: volte) ---");
+            foreach (var kvp in ShopDicePurchases.OrderByDescending(k => k.Value))
                 sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
 
             sb.AppendLine();
-            sb.AppendLine("--- Moduli piu usati (fights equipaggiato) ---");
-            foreach (var kvp in ModuleUsageCount.OrderByDescending(k => k.Value))
-                sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
-
-            var neverUsed = AllKnownModules.Where(m => !ModuleUsageCount.ContainsKey(m)).ToList();
-            sb.AppendLine();
-            sb.AppendLine("--- Moduli MAI equipaggiati in un combattimento ---");
-            if (neverUsed.Count == 0) sb.AppendLine("  (nessuno - tutti i moduli conosciuti sono stati usati almeno una volta)");
-            foreach (string name in neverUsed) sb.AppendLine($"  {name}");
+            sb.AppendLine($"--- Aumenti PV comprati: {ShopMaxHpPurchases} | Reroll Shop pagati: {ShopRerolls} | Fusioni alla Furnace: {FurnaceFusions} ---");
 
             sb.AppendLine();
-            sb.AppendLine("--- Sblocchi Meta acquistati ---");
+            sb.AppendLine("--- Dadi salvati alla schermata Meta ---");
             foreach (var kvp in MetaUnlockPurchases.OrderByDescending(k => k.Value))
                 sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
 
@@ -165,9 +152,6 @@ namespace Rollrate.Simulation
             sb.AppendLine($"  Risonanza: {(ArchiveResonanceTotal > 0 ? (float)ArchiveResonanceWins / ArchiveResonanceTotal : 0):P1} ({ArchiveResonanceWins}/{ArchiveResonanceTotal})");
             sb.AppendLine($"  Tributo:   {(ArchiveTributeTotal > 0 ? (float)ArchiveTributeWins / ArchiveTributeTotal : 0):P1} ({ArchiveTributeWins}/{ArchiveTributeTotal})");
             sb.AppendLine($"  Ambizione: {(ArchiveAmbitionTotal > 0 ? (float)ArchiveAmbitionWins / ArchiveAmbitionTotal : 0):P1} ({ArchiveAmbitionWins}/{ArchiveAmbitionTotal})");
-
-            sb.AppendLine();
-            sb.AppendLine($"--- Smantellamenti totali: {DismantleCount} ---");
 
             return sb.ToString();
         }

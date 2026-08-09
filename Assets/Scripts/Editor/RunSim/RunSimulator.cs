@@ -340,9 +340,10 @@ namespace Rollrate.Simulation
                 DieType type = types[Random.Range(0, types.Length)];
                 var offer = new DieInstance(size, type);
 
-                if (maxEffects > 0 && config.effectRegistry != null)
+                int actualEffectCount = Random.Range(0, maxEffects + 1); // same rule as ShopController: base (0) is always a possible roll
+                if (actualEffectCount > 0 && config.effectRegistry != null)
                 {
-                    foreach (var e in config.effectRegistry.GetRandomUnlocked(type, state.currentEchelon, maxEffects)) offer.AddEffect(e);
+                    foreach (var e in config.effectRegistry.GetRandomUnlocked(type, state.currentEchelon, actualEffectCount)) offer.AddEffect(e);
                 }
 
                 state.scrap -= dieCost;

@@ -128,9 +128,13 @@ namespace Rollrate.Shop
             var offer = new DieInstance(size, type);
 
             int maxEffects = MaxEffectsByGradeAndPage[gradeIndex, pageIndex];
-            if (maxEffects > 0 && effectRegistry != null)
+            // "Un dado base (0 Effetti) resta comunque sempre acquistabile" (design doc Section 6) -
+            // maxEffects is a CAP, not a guarantee: the actual count on any given offer is random
+            // between 0 and the cap, so a plain base die is always a possible roll, not just the max every time.
+            int actualEffectCount = Random.Range(0, maxEffects + 1);
+            if (actualEffectCount > 0 && effectRegistry != null)
             {
-                var picked = effectRegistry.GetRandomUnlocked(type, state.currentEchelon, maxEffects);
+                var picked = effectRegistry.GetRandomUnlocked(type, state.currentEchelon, actualEffectCount);
                 foreach (var e in picked) offer.AddEffect(e);
             }
 

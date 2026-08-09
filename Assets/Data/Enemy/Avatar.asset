@@ -16,9 +16,11 @@ MonoBehaviour:
   flavorText: Primordial deity, Void
   grade: 5
   tier: 0
-  maxHp: 38
-  baseThreshold: 26
-  inhibitorDie: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
-  abilityId: 12
+  maxHp: 18
+  baseThreshold: 20
+  baseAttack: 16
+  inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  abilityId: 13
   abilityDescription: Echo dice add half their value to Threshold
+  coreEvolutionOnDefeat: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
   icon: {fileID: 0}

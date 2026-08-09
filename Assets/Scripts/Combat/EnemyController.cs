@@ -1,62 +1,126 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Rollrate.Data;
 
 namespace Rollrate.Combat
 {
     /// <summary>
-    /// Holds the runtime state of the enemy in the current fight: current HP,
-    /// the Inhibitor Die roll for this turn, the Threshold calculation, and
-    /// any persistent state its ability needs across turns (e.g. Gatekeeper's
-    /// growing Threshold bonus, Prism's remembered target slot, Judge's
-    /// growing set of permanently inhibited values, Sovereign's locked
-    /// destroy-value). This persistent state lives here - not on the shared
-    /// ability instance in EnemyAbilityRegistry - because the same ability
-    /// class instance is reused across every enemy of that type.
+    /// Holds the runtime state of the enemy in the current fight: current
+    /// HP, the Inhibitor Die roll for this turn, and every piece of
+    /// persistent state the 15 Abilities need (permanent bonuses,
+    /// next-turn pending bonuses, a permanently-inhibited value, etc.).
+    /// The actual ability BEHAVIOR (what each one does and when) lives in
+    /// EnemyAbilityResolver, not here - this class only stores the state
+    /// and exposes the final Threshold/Attack for the turn.
     /// </summary>
     public class EnemyController : MonoBehaviour
     {
-        /// <summary>
-        /// Set to false by the Balance Simulator before running thousands of
-        /// fights, to avoid the significant overhead of millions of Debug.Log
-        /// calls (string formatting + console writes) slowing the run down.
-        /// Always true during normal gameplay.
-        /// </summary>
-        public static bool VerboseLogging = true;
-
         [Header("Enemy Data")]
         [SerializeField] private EnemyData enemyData;
 
         public int CurrentHp { get; private set; }
         public int MaxHp => enemyData != null ? enemyData.maxHp : 0;
+        public int BaseThreshold => enemyData != null ? enemyData.baseThreshold : 0;
+        public int BaseAttack => enemyData != null ? enemyData.baseAttack : 0;
         public int LastInhibitedValue { get; private set; }
         public DieData InhibitorDieType => enemyData != null ? enemyData.inhibitorDie : null;
         public bool IsDefeated => CurrentHp <= 0;
+        public EnemyAbilityId AbilityId => enemyData != null ? enemyData.abilityId : EnemyAbilityId.None;
 
         /// <summary>The full EnemyData asset for this fight - used by the enemy info tooltip.</summary>
         public EnemyData Data => enemyData;
 
-        // --- Persistent per-enemy ability state ---
-        private int _permanentThresholdBonus;
-        private SlotType? _prismTargetSlot;
-        private readonly HashSet<int> _permanentlyInhibitedValues = new HashSet<int>();
-        public int PersistentDestroyValue { get; private set; } = -1; // Sovereign: -1 = not yet locked in
+        // --- Per-turn state (Suppress, Inhibitor Parity) ---
+        private int _pendingAttackReduction; // Suppress (design doc Section 5) - applied to the NEXT turn's Attack, then cleared
+        private bool _inhibitorBoostsAttackThisTurn; // true = Odd roll (boosts Attack), false = Even roll (boosts Threshold) - design doc Section 4
+
+        /// <summary>PUNTO APERTO: magnitudine non specificata dal design doc - +2 flat, provvisorio, coerente con gli altri bonus del gioco.</summary>
+        public const int InhibitorParityBoost = 2;
+
+        // --- Ability persistent state (design doc Section 8) ---
+        /// <summary>Gatekeeper [Clockwork]: accumulates forever, +2 every turn start.</summary>
+        public int PermanentThresholdBonus { get; private set; }
+        /// <summary>Cantor [Discord] / Tracer [Pressure]: queued at the end of a turn, consumed at the start of the NEXT.</summary>
+        public int PendingNextTurnThresholdBonus { get; private set; }
+        public int PendingNextTurnAttackBonus { get; private set; }
+        /// <summary>Eraser [Backlash]: reset every turn, +2 per Reroll used THIS turn only.</summary>
+        public int RerollThresholdBonusThisTurn { get; private set; }
+        /// <summary>Judge [Sentence]: chosen once (first turn) and kept for the rest of the fight.</summary>
+        public int? PermanentExtraInhibitedValue { get; private set; }
+        /// <summary>Prism [Refraction]: re-rolled every turn - which Type gets halved this turn.</summary>
+        public DieType RefractionTargetTypeThisTurn { get; private set; }
+
+        public void AddPermanentThresholdBonus(int amount) => PermanentThresholdBonus += amount;
+        public void QueueNextTurnThresholdBonus(int amount) => PendingNextTurnThresholdBonus += amount;
+        public void QueueNextTurnAttackBonus(int amount) => PendingNextTurnAttackBonus += amount;
+        public void AddRerollThresholdBonusThisTurn(int amount) => RerollThresholdBonusThisTurn += amount;
+        public void SetPermanentExtraInhibitedValueOnce(int value)
+        {
+            if (!PermanentExtraInhibitedValue.HasValue) PermanentExtraInhibitedValue = value;
+        }
+        public void RollRefractionTargetType()
+        {
+            var types = new[] { DieType.Power, DieType.Stability, DieType.Flow, DieType.Echo };
+            RefractionTargetTypeThisTurn = types[Random.Range(0, types.Length)];
+        }
+
+        /// <summary>This turn's Threshold: base + Inhibitor Parity boost (if Even) + permanent + pending-from-last-turn + this-turn's-reroll bonuses. Clears the two per-turn/pending components that are spent once read.</summary>
+        public int GetThresholdForThisTurn()
+        {
+            int threshold = BaseThreshold
+                + (!_inhibitorBoostsAttackThisTurn ? InhibitorParityBoost : 0)
+                + PermanentThresholdBonus
+                + PendingNextTurnThresholdBonus
+                + RerollThresholdBonusThisTurn;
+            return threshold;
+        }
+
+        /// <summary>Suppress (design doc Section 5): queues a reduction to apply to this enemy's Attack starting NEXT turn.</summary>
+        public void QueuePendingAttackReduction(int amount)
+        {
+            if (amount > 0) _pendingAttackReduction += amount;
+        }
+
+        /// <summary>This turn's actual Attack: base + Inhibitor Parity boost (if Odd) + pending-from-last-turn - Suppress reduction. Clamped at 0.</summary>
+        public int GetAttackForThisTurnAndClearPending()
+        {
+            int attack = BaseAttack
+                + (_inhibitorBoostsAttackThisTurn ? InhibitorParityBoost : 0)
+                + PendingNextTurnAttackBonus;
+            attack = Mathf.Max(0, attack - _pendingAttackReduction);
+            _pendingAttackReduction = 0;
+            return attack;
+        }
+
+        /// <summary>Call once per turn, right after ResolveCheck, to clear the "pending from last turn" bonuses and the per-turn reroll bonus - they've been read and applied already.</summary>
+        public void ClearPerTurnAbilityState()
+        {
+            PendingNextTurnThresholdBonus = 0;
+            PendingNextTurnAttackBonus = 0;
+            RerollThresholdBonusThisTurn = 0;
+        }
 
         private void Awake()
         {
-            // If the Map queued up a specific enemy (real gameplay flow),
-            // use that; otherwise fall back to the Inspector-assigned
-            // debug enemy (for testing this scene standalone/via the old
-            // debug buttons).
-            EnemyData toFight = Rollrate.Core.CombatNodeContext.PendingEnemy != null
+            // Only capture WHICH enemy to fight here - do NOT touch GameState yet.
+            // Unity does not guarantee Awake() order between different GameObjects:
+            // if RunManager's own Awake() (which populates the dice pool) happened
+            // to run AFTER this one, ResetForNewFight() would build an empty deck
+            // for the whole fight - permanently 0 dice drawable, Attack/Defense
+            // always 0, indistinguishable from "damage doesn't work". Start() is
+            // guaranteed by Unity to run only after EVERY object's Awake() has
+            // already completed, so it's the safe place for this.
+            _pendingEnemyData = Rollrate.Core.CombatNodeContext.PendingEnemy != null
                 ? Rollrate.Core.CombatNodeContext.PendingEnemy
                 : enemyData;
 
             Rollrate.Core.CombatNodeContext.PendingEnemy = null; // consumed
+        }
 
-            // Populated here (not in Start()) so enemy HP/data is guaranteed
-            // ready before any other script's Start() runs.
-            StartFight(toFight);
+        private EnemyData _pendingEnemyData;
+
+        private void Start()
+        {
+            StartFight(_pendingEnemyData);
         }
 
         /// <summary>Resets this controller for a fresh fight against the given enemy.</summary>
@@ -65,108 +129,57 @@ namespace Rollrate.Combat
             enemyData = data;
             CurrentHp = enemyData != null ? enemyData.maxHp : 0;
             LastInhibitedValue = 0;
-            _permanentThresholdBonus = 0;
-            _prismTargetSlot = null;
-            _permanentlyInhibitedValues.Clear();
-            PersistentDestroyValue = -1;
+            _pendingAttackReduction = 0;
+            _inhibitorBoostsAttackThisTurn = false;
+            PermanentThresholdBonus = 0;
+            PendingNextTurnThresholdBonus = 0;
+            PendingNextTurnAttackBonus = 0;
+            RerollThresholdBonusThisTurn = 0;
+            PermanentExtraInhibitedValue = null;
+            RefractionTargetTypeThisTurn = DieType.Power;
 
-            // Deck/Discard reset: every fight starts with a full, freshly
-            // shuffled Draw Pile from all owned dice and an empty Discard
-            // Pile - confirmed design rule, not just a first-run default.
             if (Rollrate.Core.RunManager.Instance != null)
             {
-                Rollrate.Core.RunManager.Instance.State.InitializeDeckForFight();
+                var state = Rollrate.Core.RunManager.Instance.State;
+                state.ResetForNewFight();
+                Debug.Log($"[EnemyController] Deck built for this fight: {state.drawPile.Count} dice in Draw Pile, {state.dicePool.Count} owned total.");
+                if (state.dicePool.Count == 0)
+                {
+                    Debug.LogWarning("[EnemyController] Dice Pool is EMPTY - RunManager's Debug Starting Pool is probably not configured. Attack/Defense will always be 0 with no dice to draw.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[EnemyController] RunManager.Instance is null at fight start - no run in progress? The deck was NOT built, Attack/Defense will be 0 all fight.");
             }
 
-            if (VerboseLogging) Debug.Log($"[EnemyController] Fight started against {enemyData?.displayName}, HP: {CurrentHp}");
+            Debug.Log($"[EnemyController] Fight started against {enemyData?.displayName}, HP: {CurrentHp}, Threshold: {BaseThreshold}, Attack: {BaseAttack}, Ability: {AbilityId}");
         }
 
-        /// <summary>
-        /// Rolls this enemy's Inhibitor Die and triggers its ability's
-        /// OnTurnStart hook. Call this at the start of a turn, alongside
-        /// the player's own dice roll.
-        /// </summary>
+        /// <summary>Rolls this enemy's Inhibitor Die and computes the Parity boost (design doc Section 4).</summary>
         public void RollInhibitor()
         {
-            if (enemyData != null)
-            {
-                EnemyAbilityRegistry.Get(enemyData.abilityId).OnTurnStart(this);
-            }
-
             if (enemyData == null || enemyData.inhibitorDie == null)
             {
                 LastInhibitedValue = 0;
+                _inhibitorBoostsAttackThisTurn = false;
                 return;
             }
 
             LastInhibitedValue = Random.Range(1, enemyData.inhibitorDie.faces + 1);
-            if (VerboseLogging) Debug.Log($"[EnemyController] Inhibitor rolled: {LastInhibitedValue} (dice showing this value are inhibited this turn)");
+            _inhibitorBoostsAttackThisTurn = LastInhibitedValue % 2 != 0; // Odd -> boosts Attack, Even -> boosts Threshold
+            Debug.Log($"[EnemyController] Inhibitor rolled: {LastInhibitedValue} ({(_inhibitorBoostsAttackThisTurn ? "Odd, +2 Attack" : "Even, +2 Threshold")} this turn).");
         }
-
-        /// <summary>Computes this turn's effective Threshold: base + permanent bonus + this ability's modifier.</summary>
-        public int GetEffectiveThreshold(EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return 0;
-            var ability = EnemyAbilityRegistry.Get(enemyData.abilityId);
-            int baseThreshold = enemyData.baseThreshold + _permanentThresholdBonus;
-            return ability.ApplyThresholdModifier(baseThreshold, abilityCtx);
-        }
-
-        public int GetExtraInhibitedValue(EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return -1;
-            return EnemyAbilityRegistry.Get(enemyData.abilityId).GetExtraInhibitedValue(abilityCtx);
-        }
-
-        public int GetBonusDamageOnFailure(EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return 0;
-            return EnemyAbilityRegistry.Get(enemyData.abilityId).GetBonusDamageOnFailure(abilityCtx);
-        }
-
-        public int ModifyDieValue(SlotType slot, int rawValue, DieData dieType, EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return rawValue;
-            return EnemyAbilityRegistry.Get(enemyData.abilityId).ModifyPlacedDieValue(slot, rawValue, dieType, abilityCtx);
-        }
-
-        /// <summary>Notifies this enemy's ability that the turn has fully resolved.</summary>
-        public void NotifyTurnEnd(EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return;
-            EnemyAbilityRegistry.Get(enemyData.abilityId).OnTurnEnd(this, abilityCtx);
-        }
-
-        /// <summary>
-        /// Notifies this enemy's ability that Second Chance's reroll was
-        /// actually used this turn. Returns any extra direct HP damage the
-        /// ability inflicts as a reaction (e.g. Warden's Stasis).
-        /// </summary>
-        public int NotifyFlowRerollUsed(EnemyAbilityContext abilityCtx)
-        {
-            if (enemyData == null) return 0;
-            return EnemyAbilityRegistry.Get(enemyData.abilityId).OnFlowRerollUsed(abilityCtx);
-        }
-
-        /// <summary>Returns a copy of the permanently inhibited values (Judge).</summary>
-        public HashSet<int> GetPermanentlyInhibitedValues() => new HashSet<int>(_permanentlyInhibitedValues);
-
-        // --- Methods abilities call (via the EnemyController passed into EnemyAbilityContext) to store persistent state ---
-        public void AddPermanentThresholdBonus(int amount) => _permanentThresholdBonus += amount;
-        public void SetPrismTargetSlot(SlotType slot) => _prismTargetSlot = slot;
-        public SlotType? GetPrismTargetSlot() => _prismTargetSlot;
-        public void AddPermanentInhibitedValue(int value) => _permanentlyInhibitedValues.Add(value);
-        public void SetPersistentDestroyValue(int value) => PersistentDestroyValue = value;
 
         /// <summary>Applies damage to the enemy, clamped at 0.</summary>
         public void ApplyDamage(int amount)
         {
             CurrentHp = Mathf.Max(0, CurrentHp - amount);
-            if (VerboseLogging) Debug.Log($"[EnemyController] Took {amount} damage, HP now {CurrentHp}/{MaxHp}");
+            Debug.Log($"[EnemyController] Took {amount} damage, HP now {CurrentHp}/{MaxHp}");
 
             if (IsDefeated)
             {
-                if (VerboseLogging) Debug.Log($"[EnemyController] {enemyData?.displayName} defeated!");
+                Debug.Log($"[EnemyController] {enemyData?.displayName} defeated!");
             }
         }
     }

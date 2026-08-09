@@ -38,7 +38,7 @@ namespace Rollrate.Simulation
 
         // --- Full Resonance frequency across ALL real fights (not just won ones) ---
         public long TotalTurnsAllFights;
-        public long FullResonanceTurnsAllFights;
+        public long TurnsWithVibrationBonusAllFights;
 
         // --- Scrap economy ---
         public List<int> ScrapAtRunEnd = new List<int>(); // leftover Scrap whenever a run ends, win or lose
@@ -121,7 +121,7 @@ namespace Rollrate.Simulation
                 sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
 
             sb.AppendLine();
-            sb.AppendLine($"--- Frequenza Risonanza Totale (tutti i combattimenti reali, vinti o persi): {(TotalTurnsAllFights > 0 ? (float)FullResonanceTurnsAllFights / TotalTurnsAllFights : 0):P2} ({FullResonanceTurnsAllFights}/{TotalTurnsAllFights} turni) ---");
+            sb.AppendLine($"--- Frequenza turni con almeno un dado in bonus di Vibrazione (tutti i combattimenti, vinti o persi): {(TotalTurnsAllFights > 0 ? (float)TurnsWithVibrationBonusAllFights / TotalTurnsAllFights : 0):P2} ({TurnsWithVibrationBonusAllFights}/{TotalTurnsAllFights} turni) ---");
 
             sb.AppendLine();
             if (ScrapAtRunEnd.Count > 0)

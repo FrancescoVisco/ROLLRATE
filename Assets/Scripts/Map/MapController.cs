@@ -364,7 +364,9 @@ namespace Rollrate.Map
             }
             else
             {
-                Rollrate.Meta.MetaProgressionManager.AwardForRunComplete();
+                // PUNTO APERTO: l'esito di vittoria completa (Sovereign sconfitto) e' ancora
+                // da progettare per intero (design doc Sezione 7, "Vittoria completa") - per ora
+                // manda comunque alla schermata Meta senza nessuna ricompensa specifica.
                 Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! Verso la schermata Meta.");
                 SceneManager.LoadScene(metaSceneName);
             }

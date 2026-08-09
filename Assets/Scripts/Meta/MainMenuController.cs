@@ -16,14 +16,12 @@ namespace Rollrate.Meta
     {
         [SerializeField] private Button newRunButton;
         [SerializeField] private Button quitButton;
-        [SerializeField] private Button debugResetProgressButton; // DEBUG ONLY - wipes Frammenti Residui/unlocks, remove before shipping
         [SerializeField] private string mapSceneName = "MapScene";
 
         private void Start()
         {
             if (newRunButton != null) newRunButton.onClick.AddListener(OnNewRunClicked);
             if (quitButton != null) quitButton.onClick.AddListener(OnQuitClicked);
-            if (debugResetProgressButton != null) debugResetProgressButton.onClick.AddListener(OnDebugResetProgressClicked);
         }
 
         private void OnNewRunClicked()
@@ -45,11 +43,6 @@ namespace Rollrate.Meta
 #else
             Application.Quit();
 #endif
-        }
-
-        private void OnDebugResetProgressClicked()
-        {
-            MetaProgressionManager.ResetAll();
         }
     }
 }

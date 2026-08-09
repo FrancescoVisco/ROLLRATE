@@ -916,6 +916,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 888479386}
   fragmentsText: {fileID: 213843773}
+  legendText: {fileID: 0}
   rowPrefab: {fileID: 2510496046242653760, guid: 2a78f6e337ed6af4e8d46c06a1def4f7, type: 3}
   diceContainer: {fileID: 376614238}
   modulesContainer: {fileID: 1015751343}

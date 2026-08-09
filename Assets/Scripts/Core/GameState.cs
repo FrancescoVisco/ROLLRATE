@@ -7,12 +7,22 @@ using Rollrate.Data;
 namespace Rollrate.Core
 {
     /// <summary>
-    /// Holds the full state of the current run. This is NOT a ScriptableObject:
-    /// it's a plain runtime object that lives for the duration of a play session
-    /// and gets rebuilt/reset on Fragmentation (defeat).
+    /// Holds the full state of the current run. Not a ScriptableObject:
+    /// a plain runtime object that lives for the play session and gets
+    /// rebuilt/reset on Fragmentation (defeat).
     ///
-    /// Persistent fields (survive defeat) are marked below.
-    /// Non-persistent fields reset to their starting values on Fragmentation.
+    /// DICE-TYPE REDESIGN: the pool is now a list of DieInstance (each
+    /// owned die has its own permanent DieType and its own Effects), not
+    /// a flat list of DieData "kinds". Modules/Slots/Levels are gone
+    /// entirely, replaced by Effects attached directly to dice.
+    ///
+    /// HAND SIZE REINTRODUCED (design doc Section 4): each turn's Roll
+    /// draws a fixed-size Hand from a Draw Pile built from ALL owned
+    /// dice, shuffled; resolved dice go to a Discard Pile; once the Draw
+    /// Pile runs out mid-draw, the Discard Pile is reshuffled into a
+    /// fresh Draw Pile and drawing continues. The deck is rebuilt fresh
+    /// at the start of every FIGHT (not every turn, not every run) - see
+    /// InitializeDeckForFight.
     /// </summary>
     [Serializable]
     public class GameState
@@ -23,21 +33,14 @@ namespace Rollrate.Core
         [Header("Scrap (PERSISTENT across runs)")]
         public int scrap;
 
-        [Header("Dice Pool - total owned dice (reset on Fragmentation)")]
-        [Tooltip("The master list of every die owned this run. DrawPile + DiscardPile together always contain exactly these same dice - dicePool itself isn't drawn from directly during combat.")]
-        public List<DieData> dicePool = new List<DieData>();
+        [Header("Dice Pool - every owned die, each its own instance (reset on Fragmentation)")]
+        public List<DieInstance> dicePool = new List<DieInstance>();
 
-        [Header("Draw/Discard Piles (reset on Fragmentation)")]
-        [Tooltip("Dice not yet drawn this cycle. Each Roll draws up to Hand Size from here.")]
-        public List<DieData> drawPile = new List<DieData>();
-        [Tooltip("Dice already drawn and resolved this cycle (used or not). Reshuffled into DrawPile once DrawPile runs out.")]
-        public List<DieData> discardPile = new List<DieData>();
-
-        [Header("Installed Modules per Slot - currently EQUIPPED (reset on Fragmentation)")]
-        public Dictionary<SlotType, ModuleData> installedModules = new Dictionary<SlotType, ModuleData>();
-
-        [Header("Owned Modules per Slot - everything bought, not necessarily equipped (reset on Fragmentation)")]
-        public Dictionary<SlotType, List<ModuleData>> ownedModules = new Dictionary<SlotType, List<ModuleData>>();
+        [Header("Draw/Discard Pile (rebuilt at the start of every fight)")]
+        [Tooltip("Dice not yet drawn this fight's deck cycle. Each turn's Roll draws Hand Size from here.")]
+        public List<DieInstance> drawPile = new List<DieInstance>();
+        [Tooltip("Dice already drawn and resolved this fight. Reshuffled into drawPile once drawPile runs out.")]
+        public List<DieInstance> discardPile = new List<DieInstance>();
 
         [Header("HP (reset on Fragmentation)")]
         public int currentHp;
@@ -47,22 +50,24 @@ namespace Rollrate.Core
         public int currentEchelon = 1; // Grade I -> V
         public int currentPage = 1;    // Page 1-3 within the Echelon
 
-        [Header("Deferred Turn Effects (reset on Fragmentation)")]
-        [Tooltip("Changeover: 10 Charges = +1 Die added to the pool.")]
-        public int changeoverCharges;
-        [Tooltip("Changeover: dice queued here are rolled for exactly ONE turn (the next Roll), then removed from the game entirely - never added to the pool/deck, never discarded.")]
-        public List<DieData> pendingChangeoverBonusDice = new List<DieData>();
-        [Tooltip("Overload: flat bonus applied to the first Power die placed next turn.")]
-        public int pendingNextTurnPowerBonus;
-        [Tooltip("Aiming: % reduction applied to the enemy Threshold next turn (0 = none).")]
-        public float pendingThresholdReductionPercent;
-        [Tooltip("Scrap (Odd): % discount applied to the next Module or Die purchased at the Shop (0 = none).")]
-        public float pendingShopDiscountPercent;
+        [Header("Meta tracking (reset on Fragmentation, consumed on defeat)")]
+        [Tooltip("Every DieInstance added to the pool THIS run via Dice Dealer, Archive, or Furnace - the pool the Meta end-of-run screen picks its 3 candidates from. Dice present at the start of the run (including any inherited from a previous Meta pick) are NOT added here.")]
+        public List<DieInstance> unlockedThisRun = new List<DieInstance>();
+
+        [Header("Per-fight transient state (reset at the start of every fight)")]
+        [Tooltip("Dice temporarily disabled for the CURRENT fight only (e.g. Sovereign's [Delete]) - excluded from the deck, automatically available again next fight.")]
+        public HashSet<DieInstance> disabledThisFight = new HashSet<DieInstance>();
+
+        [Tooltip("Reverb Effect (Section 5): a value pending for a SPECIFIC die instance's next turn, applied automatically (added to its rolledValue) the next time that instance is drawn into a Hand - see TurnController.RollAll.")]
+        public Dictionary<DieInstance, float> pendingNextTurnBonus = new Dictionary<DieInstance, float>();
+
+        [Tooltip("Reverb (Echo Effect): a bonus queued for a SPECIFIC owned die, to apply automatically the next time that exact die is drawn into a Hand - design doc Section 5, Reverb: 'il valore si applica sia questo turno che il prossimo'.")]
+        public Dictionary<DieInstance, int> pendingReverbBonus = new Dictionary<DieInstance, int>();
 
         /// <summary>
-        /// Sets up a brand new run: default HP, empty pool except the Core Die,
-        /// no modules installed/owned. Scrap and Core Die evolution level are
-        /// NOT touched here - call this only after applying persistence rules on defeat.
+        /// Sets up a brand new run: default HP, empty pool except the Core Die.
+        /// Scrap and Core Die evolution are NOT touched here - call this only
+        /// after applying persistence rules on defeat.
         /// </summary>
         public void ResetForNewRun(DieData startingCoreDie, int startingHp)
         {
@@ -74,18 +79,17 @@ namespace Rollrate.Core
             dicePool.Clear();
             drawPile.Clear();
             discardPile.Clear();
-            installedModules.Clear();
-            ownedModules.Clear();
-            changeoverCharges = 0;
-            pendingChangeoverBonusDice.Clear();
-            pendingNextTurnPowerBonus = 0;
-            pendingThresholdReductionPercent = 0f;
-            pendingShopDiscountPercent = 0f;
+            unlockedThisRun.Clear();
+            disabledThisFight.Clear();
+            pendingNextTurnBonus.Clear();
+            pendingReverbBonus.Clear();
         }
 
         /// <summary>
-        /// Applies the Fragmentation rule: Core Die level and Scrap persist,
-        /// everything else (pool, modules, HP, progress) resets.
+        /// Applies the Fragmentation rule: Core Die and Scrap persist,
+        /// everything else resets - EXCEPT the single die chosen at the
+        /// Meta end-of-run screen (see MetaController), which the caller
+        /// adds back to the fresh pool AFTER calling this.
         /// </summary>
         public void ApplyFragmentation(int startingHp)
         {
@@ -97,181 +101,113 @@ namespace Rollrate.Core
             dicePool.Clear();
             drawPile.Clear();
             discardPile.Clear();
-            installedModules.Clear();
-            ownedModules.Clear();
-            changeoverCharges = 0;
-            pendingChangeoverBonusDice.Clear();
-            pendingNextTurnPowerBonus = 0;
-            pendingThresholdReductionPercent = 0f;
-            pendingShopDiscountPercent = 0f;
+            unlockedThisRun.Clear();
+            disabledThisFight.Clear();
+            pendingNextTurnBonus.Clear();
+            pendingReverbBonus.Clear();
         }
 
         /// <summary>
-        /// Adds a newly acquired die to both the master ownership list and
-        /// the draw pile (so it's available to be drawn soon).
+        /// Call once at the start of every fight: clears the per-fight
+        /// disable list AND rebuilds the deck (shuffles every owned,
+        /// non-disabled die into a fresh Draw Pile, empties the Discard Pile).
         /// </summary>
-        public void AddDieToPool(DieData die)
+        public void ResetForNewFight()
         {
-            dicePool.Add(die);
-            drawPile.Add(die);
+            disabledThisFight.Clear();
+            pendingNextTurnBonus.Clear();
+            pendingReverbBonus.Clear();
+            InitializeDeckForFight();
         }
 
-        /// <summary>
-        /// Replaces every occurrence of oldDie with newDie across dicePool
-        /// and whichever pile currently holds it (Evolve Die at the Shop).
-        /// </summary>
-        public void ReplaceDieEverywhere(DieData oldDie, DieData newDie)
-        {
-            ReplaceFirst(dicePool, oldDie, newDie);
-            ReplaceFirst(drawPile, oldDie, newDie);
-            ReplaceFirst(discardPile, oldDie, newDie);
-        }
-
-        private void ReplaceFirst(List<DieData> list, DieData oldDie, DieData newDie)
-        {
-            int index = list.IndexOf(oldDie);
-            if (index >= 0) list[index] = newDie;
-        }
-
-        /// <summary>True if the given module is owned (at least one copy) for its own slot.</summary>
-        public bool OwnsModule(ModuleData module)
-        {
-            return ownedModules.TryGetValue(module.slot, out var owned) && owned.Contains(module);
-        }
-
-        /// <summary>
-        /// How many copies of this module are currently owned. Owning more
-        /// than one is intentional - spares can be Dismantled for Scrap
-        /// (design's "must keep at least one module per type" rule) without
-        /// losing the copy you're actually using.
-        /// </summary>
-        public int GetOwnedModuleCount(ModuleData module)
-        {
-            return ownedModules.TryGetValue(module.slot, out var owned) ? owned.Count(m => m == module) : 0;
-        }
-
-        /// <summary>
-        /// Adds a module to the owned collection for its slot (does not
-        /// equip it). Duplicates are allowed on purpose - see GetOwnedModuleCount.
-        /// </summary>
-        public void AddOwnedModule(ModuleData module)
-        {
-            if (!ownedModules.TryGetValue(module.slot, out var owned))
-            {
-                owned = new List<ModuleData>();
-                ownedModules[module.slot] = owned;
-            }
-            owned.Add(module);
-        }
-
-        /// <summary>
-        /// Equips an already-owned module into its own fixed slot,
-        /// replacing whatever was equipped there before. Free - no cost
-        /// here; whichever UI calls this (e.g. the Equipment node) decides
-        /// whether a cost applies. Does nothing if the module isn't owned.
-        /// </summary>
-        public void EquipModule(ModuleData module)
-        {
-            if (module == null || !OwnsModule(module)) return;
-            installedModules[module.slot] = module;
-        }
-
-        // --- Dismantling (Smantellamento) ---
-
-        /// <summary>
-        /// True if dismantling this exact module copy is allowed: the
-        /// design rule requires keeping at least one module per slot TYPE,
-        /// so this only checks the total owned count for that module's
-        /// slot (not copies of this specific module) stays above zero
-        /// after removal.
-        /// </summary>
-        public bool CanDismantleModule(ModuleData module)
-        {
-            if (module == null) return false;
-            return ownedModules.TryGetValue(module.slot, out var owned) && owned.Count > 1;
-        }
-
-        /// <summary>
-        /// True if dismantling one die is allowed: the design rule requires
-        /// keeping at least 4 dice in the pool after removal.
-        /// </summary>
-        public bool CanDismantleDie()
-        {
-            return dicePool.Count > 4;
-        }
-
-        /// <summary>
-        /// Removes one owned copy of a module. If it was the equipped one
-        /// for that slot, automatically re-equips another owned copy of
-        /// that slot (guaranteed to exist - see CanDismantleModule). Does
-        /// NOT check CanDismantleModule itself - callers must check first.
-        /// </summary>
-        public bool RemoveOwnedModule(ModuleData module)
-        {
-            if (module == null) return false;
-            if (!ownedModules.TryGetValue(module.slot, out var owned) || !owned.Remove(module)) return false;
-
-            if (installedModules.TryGetValue(module.slot, out var equipped) && equipped == module)
-            {
-                if (owned.Count > 0) installedModules[module.slot] = owned[0];
-                else installedModules.Remove(module.slot);
-            }
-            return true;
-        }
-
-        // --- Deck (Draw Pile / Discard Pile) ---
-
-        /// <summary>
-        /// Shuffles every owned die into a fresh Draw Pile and empties the
-        /// Discard Pile. Call this once at the start of each fight.
-        /// </summary>
+        /// <summary>Shuffles every owned, non-disabled die into a fresh Draw Pile and empties the Discard Pile.</summary>
         public void InitializeDeckForFight()
         {
-            drawPile = new List<DieData>(dicePool);
+            drawPile = new List<DieInstance>(dicePool.Where(d => !disabledThisFight.Contains(d)));
             ShuffleList(drawPile);
             discardPile.Clear();
         }
 
         /// <summary>
-        /// Draws up to `count` dice from the Draw Pile. If it runs out
-        /// mid-draw, the Discard Pile is reshuffled into a new Draw Pile
-        /// automatically and drawing continues. Returns fewer than `count`
-        /// only if the player owns fewer dice in total than requested.
+        /// Draws up to `count` dice from the Draw Pile for this turn's
+        /// Hand. If it runs out mid-draw, the Discard Pile is reshuffled
+        /// into a new Draw Pile automatically and drawing continues.
+        /// Returns fewer than `count` only if the player owns fewer
+        /// (non-disabled) dice in total than requested.
         /// </summary>
-        public List<DieData> DrawHand(int count)
+        public List<DieInstance> DrawHand(int count)
         {
-            var hand = new List<DieData>();
+            var hand = new List<DieInstance>();
             for (int i = 0; i < count; i++)
             {
+                // Skip disabled dice (Sovereign's [Delete]) if they somehow ended up in
+                // the piles - reshuffle around them rather than drawing them.
+                while (drawPile.Count > 0 && disabledThisFight.Contains(drawPile[0]))
+                {
+                    discardPile.Add(drawPile[0]);
+                    drawPile.RemoveAt(0);
+                }
+
                 if (drawPile.Count == 0)
                 {
-                    if (discardPile.Count == 0) break; // no more dice owned at all
-                    drawPile = new List<DieData>(discardPile);
+                    var redrawable = discardPile.Where(d => !disabledThisFight.Contains(d)).ToList();
+                    if (redrawable.Count == 0) break; // nothing left to draw at all
+                    drawPile = redrawable;
                     ShuffleList(drawPile);
-                    discardPile.Clear();
+                    discardPile = discardPile.Where(d => disabledThisFight.Contains(d)).ToList(); // keep disabled ones parked here, out of rotation
+                    continue;
                 }
+
                 hand.Add(drawPile[0]);
                 drawPile.RemoveAt(0);
             }
             return hand;
         }
 
-        /// <summary>Moves a set of dice (an entire turn's drawn hand) into the Discard Pile.</summary>
-        public void DiscardHand(List<DieData> hand)
+        /// <summary>Moves a set of dice (a turn's drawn Hand, once resolved) into the Discard Pile.</summary>
+        public void DiscardHand(List<DieInstance> hand)
         {
             if (hand != null) discardPile.AddRange(hand);
         }
 
         /// <summary>
-        /// Permanently removes one die from the game entirely (Sovereign's
-        /// Delete ability) - not discarded, just gone. Removes it from
-        /// whichever pile currently holds it, and from the master ownership list.
+        /// Adds a newly acquired die to the pool. Pass fromRunUnlock=true
+        /// for anything gained DURING a run (Dice Dealer, Archive, Furnace
+        /// output) so it's eligible for the Meta end-of-run pick; pass
+        /// false for the starting pool itself (run setup, or the single
+        /// die inherited from a previous Meta pick).
         /// </summary>
-        public void RemoveDiePermanently(DieData die)
+        public void AddDieToPool(DieInstance die, bool fromRunUnlock)
+        {
+            dicePool.Add(die);
+            if (fromRunUnlock) unlockedThisRun.Add(die);
+        }
+
+        /// <summary>Evolves a die instance to its next tier DieData (Shop's Evoluzione Dado, or Furnace's same-Grade Fusion result), keeping its Type and Effects untouched. No-op if already at max tier.</summary>
+        public void EvolveDieInstance(DieInstance instance)
+        {
+            if (instance == null || instance.data == null || instance.data.nextTier == null) return;
+            instance.data = instance.data.nextTier;
+        }
+
+        /// <summary>
+        /// Removes one die from the game entirely and permanently (Test
+        /// di Tributo's forced loss, or Furnace consuming its two source
+        /// dice after producing the fused result).
+        /// </summary>
+        public void RemoveDiePermanently(DieInstance die)
         {
             dicePool.Remove(die);
             drawPile.Remove(die);
             discardPile.Remove(die);
+            unlockedThisRun.Remove(die);
+            disabledThisFight.Remove(die);
+        }
+
+        /// <summary>True if dismantling/removing a die is allowed: keep at least 4 dice in the pool after removal (Test di Tributo, etc.).</summary>
+        public bool CanRemoveDie()
+        {
+            return dicePool.Count > 4;
         }
 
         private static void ShuffleList<T>(List<T> list)

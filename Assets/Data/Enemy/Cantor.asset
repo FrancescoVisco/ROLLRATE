@@ -16,9 +16,10 @@ MonoBehaviour:
   flavorText: Noble aristocracy unit
   grade: 3
   tier: 0
-  maxHp: 22
-  baseThreshold: 18
+  maxHp: 12
+  baseThreshold: 12
+  baseAttack: 10
+  abilityId: 7
   inhibitorDie: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
-  abilityId: 6
   abilityDescription: Threshold +4 if Resonance occur
   icon: {fileID: 0}

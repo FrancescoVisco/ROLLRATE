@@ -16,9 +16,10 @@ MonoBehaviour:
   flavorText: Active security protocol
   grade: 2
   tier: 2
-  maxHp: 26
-  baseThreshold: 18
+  maxHp: 20
+  baseThreshold: 11
+  baseAttack: 9
+  abilityId: 6
   inhibitorDie: {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
-  abilityId: 5
   abilityDescription: Threshold +3 whenever a Frequency triggers
   icon: {fileID: 0}

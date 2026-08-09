@@ -17,7 +17,6 @@ namespace Rollrate.UI
     {
         [Header("References")]
         [SerializeField] private EnemyController enemyController;
-        [SerializeField] private CombatController combatController;
 
         [Header("UI Labels")]
         [SerializeField] private TextMeshProUGUI playerHpText;
@@ -25,8 +24,9 @@ namespace Rollrate.UI
         [SerializeField] private TextMeshProUGUI enemyHpText;
         [SerializeField] private TextMeshProUGUI thresholdText;
         [SerializeField] private TextMeshProUGUI dicePoolCountText;
-        [SerializeField] private TextMeshProUGUI bonusDiceText; // Changeover: shows "+N Bonus" while a bonus die is queued for the next Roll
+        [SerializeField] private TextMeshProUGUI bonusDiceText; // shows a count of dice currently in Vibrazione BONUS (net multiplier > x1), hidden when zero - see ShowBonusDiceSummary
         [SerializeField] private TextMeshProUGUI statusMessageText;
+        [SerializeField] private TextMeshProUGUI vibrationHandText; // shows a live summary of bonus/malus dice on the board (Vibrazione 3.0), recalculated as dice are placed - separate from statusMessageText so it never gets overwritten by targeting hints
 
         private void Start()
         {
@@ -63,20 +63,16 @@ namespace Rollrate.UI
                 enemyHpText.text = $"Enemy HP: {enemyController.CurrentHp} / {enemyController.MaxHp}";
             }
 
-            if (thresholdText != null && combatController != null)
+            if (thresholdText != null && enemyController != null)
             {
-                thresholdText.text = $"Threshold: {combatController.PreviewEffectiveThreshold()}";
+                // PUNTO APERTO (Nemici): mostra solo la Soglia base per ora - i modificatori
+                // delle abilita' nemiche torneranno quando ricostruiamo quel sistema.
+                thresholdText.text = $"Threshold: {enemyController.GetThresholdForThisTurn()}";
             }
 
             if (dicePoolCountText != null)
             {
-                dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count} (Draw: {state.drawPile.Count} / Discard: {state.discardPile.Count})";
-            }
-
-            if (bonusDiceText != null)
-            {
-                int pendingCount = state.pendingChangeoverBonusDice.Count;
-                bonusDiceText.text = pendingCount > 0 ? $"+{pendingCount} Bonus" : string.Empty;
+                dicePoolCountText.text = $"Dice Pool: {state.dicePool.Count}";
             }
         }
 
@@ -95,6 +91,33 @@ namespace Rollrate.UI
             if (statusMessageText != null)
             {
                 statusMessageText.text = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Shows the current Vibrazione hand live (recalculated by
+        /// RollKeepUIController any time dice are rolled/rerolled). Pass
+        /// an empty string to hide it (e.g. no bonus/malus dice at all).
+        /// </summary>
+        public void ShowVibrationSummary(string summaryText)
+        {
+            if (vibrationHandText != null)
+            {
+                vibrationHandText.text = summaryText;
+            }
+        }
+
+        /// <summary>
+        /// Highlights specifically how many dice currently have a
+        /// Vibrazione BONUS (net multiplier above x1) - a positive-only
+        /// subset of ShowVibrationSummary's fuller bonus/malus count.
+        /// Pass an empty string to hide it entirely (e.g. zero bonus dice).
+        /// </summary>
+        public void ShowBonusDiceSummary(string summaryText)
+        {
+            if (bonusDiceText != null)
+            {
+                bonusDiceText.text = summaryText;
             }
         }
     }

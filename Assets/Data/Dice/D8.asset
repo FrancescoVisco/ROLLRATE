@@ -19,4 +19,4 @@ MonoBehaviour:
   highMin: 6
   dieSprite: {fileID: 0}
   casteColor: {r: 1, g: 1, b: 1, a: 1}
-  nextTier: {fileID: 0}
+  nextTier: {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}

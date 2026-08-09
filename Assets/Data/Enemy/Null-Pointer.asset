@@ -16,9 +16,10 @@ MonoBehaviour:
   flavorText: Elite glitch unit
   grade: 5
   tier: 1
-  maxHp: 42
-  baseThreshold: 28
+  maxHp: 24
+  baseThreshold: 22
+  baseAttack: 18
+  abilityId: 14
   inhibitorDie: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
-  abilityId: 13
   abilityDescription: Max-face dice count as 1
   icon: {fileID: 0}

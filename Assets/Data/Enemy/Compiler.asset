@@ -16,9 +16,10 @@ MonoBehaviour:
   flavorText: Elite lockdown unit
   grade: 1
   tier: 1
-  maxHp: 12
-  baseThreshold: 12
+  maxHp: 8
+  baseThreshold: 6
+  baseAttack: 5
+  abilityId: 2
   inhibitorDie: {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
-  abilityId: 1
   abilityDescription: Placing a die in FLOW raises Threshold +4
   icon: {fileID: 0}

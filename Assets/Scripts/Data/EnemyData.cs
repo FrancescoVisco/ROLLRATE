@@ -26,6 +26,8 @@ namespace Rollrate.Data
         [Header("Combat Stats")]
         public int maxHp;
         public int baseThreshold;
+        [Tooltip("What the player's Defense must equal or exceed each turn (design doc Section 4, Attacco nemico vs Difesa).")]
+        public int baseAttack;
 
         [Header("Inhibitor Die")]
         [Tooltip("The die this enemy rolls each turn to determine the Inhibited value.")]
@@ -34,6 +36,10 @@ namespace Rollrate.Data
         [Header("Ability")]
         public EnemyAbilityId abilityId;
         [TextArea] public string abilityDescription;
+
+        [Header("Guardian Only - Data Extraction (design doc Section 8)")]
+        [Tooltip("Only meaningful for tier=Guardian: the Core Die this Guardian's defeat evolves the player's Core into (e.g. Gatekeeper -> D8). Leave empty for Base/Elite enemies.")]
+        public DieData coreEvolutionOnDefeat;
 
         [Header("Visual")]
         public Sprite icon;

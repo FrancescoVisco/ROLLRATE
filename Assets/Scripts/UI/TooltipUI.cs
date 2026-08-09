@@ -45,14 +45,37 @@ namespace Rollrate.UI
         {
             if (panel == null || !panel.activeSelf || rootCanvas == null || panelRect == null) return;
 
+            var canvasRect = rootCanvas.transform as RectTransform;
+
             Vector2 localPoint;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rootCanvas.transform as RectTransform,
+                canvasRect,
                 Input.mousePosition,
                 rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera,
                 out localPoint);
 
-            panelRect.anchoredPosition = localPoint + mouseOffset;
+            Vector2 size = panelRect.sizeDelta;
+            Rect bounds = canvasRect.rect;
+
+            // Default: grow up-and-right from the cursor (pivot is (0,0), so
+            // this anchored position IS the panel's bottom-left corner).
+            float x = localPoint.x + mouseOffset.x;
+            float y = localPoint.y + mouseOffset.y;
+
+            // Flip to the opposite side whenever the default placement would
+            // push the panel past that edge of the canvas - grows left/down
+            // from the cursor instead, so the tooltip never spills off-screen
+            // near the borders.
+            if (x + size.x > bounds.xMax) x = localPoint.x - mouseOffset.x - size.x;
+            if (y + size.y > bounds.yMax) y = localPoint.y - mouseOffset.y - size.y;
+
+            // Final safety clamp: even after flipping, a corner case (cursor
+            // right in a screen corner) could still overflow the opposite
+            // edge - pin it fully inside the canvas as a last resort.
+            x = Mathf.Clamp(x, bounds.xMin, bounds.xMax - size.x);
+            y = Mathf.Clamp(y, bounds.yMin, bounds.yMax - size.y);
+
+            panelRect.anchoredPosition = new Vector2(x, y);
         }
 
         /// <summary>

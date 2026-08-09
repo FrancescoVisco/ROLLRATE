@@ -16,9 +16,10 @@ MonoBehaviour:
   flavorText: Elite stasis unit
   grade: 4
   tier: 1
-  maxHp: 34
-  baseThreshold: 24
+  maxHp: 19
+  baseThreshold: 16
+  baseAttack: 13
+  abilityId: 11
   inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
-  abilityId: 10
   abilityDescription: 1 direct HP damage per Flow reroll used
   icon: {fileID: 0}

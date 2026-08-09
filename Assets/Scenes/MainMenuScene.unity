@@ -1045,7 +1045,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   newRunButton: {fileID: 439894862}
   quitButton: {fileID: 1398191738}
-  debugResetProgressButton: {fileID: 353119177}
   mapSceneName: MapScene
 --- !u!1 &1398191736
 GameObject:

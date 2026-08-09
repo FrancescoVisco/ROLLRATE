@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Fragment
   flavorText: Worker fragments, rigid and colorless
-  maxHp: 8
-  baseThreshold: 10
+  maxHp: 5
+  baseThreshold: 5
+  baseAttack: 4
+  abilityId: 1
   inhibitorDie: {fileID: 11400000, guid: c252d05981988ff46ae7bf94e3c137d2, type: 2}
-  abilityId: 0
   abilityDescription: If Inhibition is 1-2, Threshold +3
   icon: {fileID: 0}

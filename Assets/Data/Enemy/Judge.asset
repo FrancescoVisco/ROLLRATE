@@ -16,9 +16,11 @@ MonoBehaviour:
   flavorText: Elite stasis unit
   grade: 4
   tier: 2
-  maxHp: 42
-  baseThreshold: 26
-  inhibitorDie: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
-  abilityId: 11
+  maxHp: 30
+  baseThreshold: 18
+  baseAttack: 15
+  inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  abilityId: 12
   abilityDescription: Permanently inhibits one extra value all fight
+  coreEvolutionOnDefeat: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
   icon: {fileID: 0}

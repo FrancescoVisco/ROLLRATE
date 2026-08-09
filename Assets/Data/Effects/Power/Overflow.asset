@@ -9,8 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ab8067dfddb68c54ea7ab34b78f113ca, type: 3}
-  m_Name: DismantleRewardTable
+  m_Script: {fileID: 11500000, guid: ddecf5560ac04413b776922cff651d3e, type: 3}
+  m_Name: Overflow
   m_EditorClassIdentifier: 
-  moduleScrapByGrade: 0a0000000f00000014000000190000001e000000
-  dieScrapByGrade: 080000000c000000100000001400000018000000
+  id: 0
+  dieType: 0
+  grade: 3
+  displayName: Overflow
+  effectDescription: 'If Attack exceeds Threshold, the Excess share from this die also applies to your Defense this turn.'
+  icon: {fileID: 0}

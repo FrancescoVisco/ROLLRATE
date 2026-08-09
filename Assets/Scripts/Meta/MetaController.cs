@@ -33,7 +33,7 @@ namespace Rollrate.Meta
         [SerializeField] private Button continueButton;
 
         [Header("Scene")]
-        [SerializeField] private string mapSceneName = "MapScene";
+        [SerializeField] private string mainMenuSceneName = "MainMenuScene";
 
         private readonly List<MetaDieCandidateUI> _spawnedCandidates = new List<MetaDieCandidateUI>();
         private DieInstance _selectedDie;
@@ -91,7 +91,7 @@ namespace Rollrate.Meta
         private void OnContinueClicked()
         {
             RunManager.Instance?.FinalizeFragmentationAndContinue(_selectedDie);
-            SceneManager.LoadScene(mapSceneName);
+            SceneManager.LoadScene(mainMenuSceneName);
         }
 
         private static void ShuffleList<T>(List<T> list)

@@ -218,7 +218,11 @@ namespace Rollrate.Combat
             }
 
             bool attackSucceeded = attack >= enemyThreshold;
-            int excess = attackSucceeded ? Mathf.RoundToInt((attack - enemyThreshold) * excessMultiplier) : 0;
+            // Un Attacco riuscito fa SEMPRE almeno 1 danno, anche se il margine e' cosi'
+            // piccolo che l'Eccesso arrotondato darebbe 0 (es. Attacco 7.2 vs Soglia 7 ->
+            // Eccesso 0.2 -> arrotondato a 0 senza questo Max) - deciso col designer:
+            // "successo" deve sempre corrispondere a un effetto visibile.
+            int excess = attackSucceeded ? Mathf.Max(1, Mathf.RoundToInt((attack - enemyThreshold) * excessMultiplier)) : 0;
 
             // Overflow / Drain (design doc Section 5): each qualifying die's
             // own effective value converts to bonus Defense / healing,

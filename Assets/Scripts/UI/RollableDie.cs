@@ -40,23 +40,26 @@ namespace Rollrate.UI
         public TextMeshProUGUI valueLabel;
         [Tooltip("Shows the net Vibrazione multiplier (e.g. 'x2.5'), hidden at x1. Color scales toward gold (bonus) or burnt orange (malus) - see SetVibrationMultiplier.")]
         public TextMeshProUGUI vibrationMultiplierLabel;
-        [Tooltip("A child GameObject (e.g. a border/glow) toggled on while this die is SELECTED - marked for reroll, or (for Echo dice) awaiting a transfer target. Its color is forced to yellow by code (SelectedColor below) if it has its own Image component, so it can never end up the wrong color regardless of how it was colored in the prefab - yellow is reserved for 'selected', red stays reserved for inhibitedIndicator only.")]
+        [Tooltip("A child GameObject (e.g. a border/glow) toggled on while this die is SELECTED - marked for reroll, or (for Echo dice) awaiting a transfer target. Its color is forced to yellow by code (SelectedColor below) if it has its own Image component, so it can never end up the wrong color regardless of how it was colored in the prefab - yellow is reserved for 'selected', grey is reserved for inhibitedIndicator only.")]
         [SerializeField] private GameObject heldIndicator;
-        [Tooltip("A child GameObject (e.g. a red icon) toggled on while this die's value matches the enemy's Inhibited value. Optional.")]
+        [Tooltip("A child GameObject (e.g. a border/icon) toggled on while this die's value matches the enemy's Inhibited value. Its color is forced to grey by code (InhibitedColor below) if it has its own Image component - grey reads as 'disabled/switched off', distinct from Power's red and from SelectedColor's yellow.")]
         [SerializeField] private GameObject inhibitedIndicator;
 
         private Image _image;
         private Image _heldIndicatorImage; // cached from heldIndicator, if it has one - forced yellow, never left to chance
+        private Image _inhibitedIndicatorImage; // cached from inhibitedIndicator, if it has one - forced grey, never left to chance
 
         private static readonly Color VibrationColorNeutral = Color.white;
         private static readonly Color VibrationColorBonus = new Color(1f, 0.85f, 0.3f);   // gold
         private static readonly Color VibrationColorMalus = new Color(0.8f, 0.35f, 0.15f); // burnt orange
-        private static readonly Color SelectedColor = new Color(0.95f, 0.85f, 0.15f);      // yellow - "selected" (marked for reroll, or Echo pending a target), NEVER red (red = inhibited only)
+        private static readonly Color SelectedColor = new Color(0.95f, 0.85f, 0.15f);      // yellow - "selected" (marked for reroll, or Echo pending a target), NEVER grey (grey = inhibited only)
+        private static readonly Color InhibitedColor = new Color(0.45f, 0.45f, 0.45f);      // grey - reads as "disabled/switched off", distinct from Power's red and SelectedColor's yellow
 
         private void Awake()
         {
             _image = mainImage != null ? mainImage : GetComponent<Image>();
             if (heldIndicator != null) _heldIndicatorImage = heldIndicator.GetComponent<Image>();
+            if (inhibitedIndicator != null) _inhibitedIndicatorImage = inhibitedIndicator.GetComponent<Image>();
 
             // Force a centered anchor/pivot regardless of whatever parent
             // this ends up under (HandContainer with a Layout Group,
@@ -137,6 +140,19 @@ namespace Rollrate.UI
         public void RefreshInhibited(bool isInhibited)
         {
             if (inhibitedIndicator != null) inhibitedIndicator.SetActive(isInhibited);
+
+            // Same defensive pattern as SelectedColor: only force the color while
+            // actually shown, and never touch it if inhibitedIndicator turns out to
+            // share the die's OWN Image component (would overwrite the Type color).
+            if (isInhibited && _inhibitedIndicatorImage != null && _inhibitedIndicatorImage != _image)
+            {
+                _inhibitedIndicatorImage.color = InhibitedColor;
+            }
+            else if (_inhibitedIndicatorImage == _image && _inhibitedIndicatorImage != null)
+            {
+                Debug.LogWarning($"[RollableDie] '{name}': Inhibited Indicator is wired to the die's OWN Image - it must be a SEPARATE child GameObject, otherwise it overwrites the Type color. Fix this in the prefab.", this);
+            }
+
             ReapplyTypeColor();
         }
 

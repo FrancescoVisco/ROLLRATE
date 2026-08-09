@@ -60,13 +60,13 @@ namespace Rollrate.Map
         /// <summary>Base percentages per node type, for P1/P2/P3 (index 0/1/2). Must sum to 100 per page.</summary>
         private static readonly Dictionary<NodeType, float[]> BasePercentages = new()
         {
-            { NodeType.Conflict,  new[] { 50f, 35f, 45f } },
-            { NodeType.Merchant,  new[] { 15f, 15f, 20f } },
-            { NodeType.Archive,   new[] { 15f, 10f, 10f } },
+            { NodeType.Conflict,  new[] { 45f, 30f, 30f } },
+            { NodeType.Merchant,  new[] { 10f, 10f, 20f } },
+            { NodeType.Archive,   new[] { 15f, 15f, 15f } },
             { NodeType.Overload,  new[] {  0f, 15f,  5f } },
             { NodeType.Glitch,    new[] { 10f, 10f,  5f } },
-            { NodeType.Bonfire,   new[] {  5f, 10f, 10f } },
-            { NodeType.Dismantle, new[] {  5f,  5f,  5f } },
+            { NodeType.Bonfire,   new[] { 10f, 10f, 10f } },
+            { NodeType.Furnace,   new[] { 10f, 10f, 15f } },
         };
 
         /// <summary>"Bivi" (fork) frequency per page - chance a node connects to 2 nodes in the next column instead of 1.</summary>

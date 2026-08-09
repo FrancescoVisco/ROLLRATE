@@ -32,6 +32,8 @@ namespace Rollrate.Core
 
         [Header("Scrap (PERSISTENT across runs)")]
         public int scrap;
+        [Tooltip("Count of enemies defeated during the current run - shown on the Meta screen's run summary (design doc Section 7). Reset on both a fresh run and Fragmentation.")]
+        public int enemiesDefeatedThisRun;
 
         [Header("Dice Pool - every owned die, each its own instance (reset on Fragmentation)")]
         public List<DieInstance> dicePool = new List<DieInstance>();
@@ -72,6 +74,7 @@ namespace Rollrate.Core
         public void ResetForNewRun(DieData startingCoreDie, int startingHp)
         {
             coreDie = startingCoreDie;
+            scrap = 0; // full reset - only reached on first launch or after Final Victory (design doc Section 7); normal Defeat flow uses ApplyFragmentation instead, which preserves Scrap
             currentHp = startingHp;
             maxHp = startingHp;
             currentEchelon = 1;
@@ -83,6 +86,7 @@ namespace Rollrate.Core
             disabledThisFight.Clear();
             pendingNextTurnBonus.Clear();
             pendingReverbBonus.Clear();
+            enemiesDefeatedThisRun = 0;
         }
 
         /// <summary>
@@ -105,6 +109,7 @@ namespace Rollrate.Core
             disabledThisFight.Clear();
             pendingNextTurnBonus.Clear();
             pendingReverbBonus.Clear();
+            enemiesDefeatedThisRun = 0;
         }
 
         /// <summary>

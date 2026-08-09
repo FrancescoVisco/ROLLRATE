@@ -61,9 +61,21 @@ namespace Rollrate.Combat
         public float cascadeBonusThisTurn;
 
         /// <summary>True if this die carries the given Effect.</summary>
+        /// <summary>
+        /// True if this die carries the given Effect. Returns false
+        /// unconditionally if the die is currently Inhibited - an
+        /// inhibited die's value still counts fully toward Attacco/
+        /// Difesa (no change there), but its Effects never activate and
+        /// it can't vibrate (design doc Section 5, Inibizione: "diventa
+        /// un numero e basta"). Centralized here so every Effect check
+        /// in the game is automatically covered, without needing to gate
+        /// each one individually.
+        /// </summary>
         public bool HasEffect(HeldDieState d, EffectId id)
         {
-            return d?.instance?.effects != null && d.instance.effects.Any(e => e != null && e.id == id);
+            if (d == null) return false;
+            if (IsInhibited(d)) return false;
+            return d.instance?.effects != null && d.instance.effects.Any(e => e != null && e.id == id);
         }
 
         /// <summary>
@@ -149,6 +161,8 @@ namespace Rollrate.Combat
             int total = 0;
             foreach (var d in GetOfType(DieType.Flow))
             {
+                if (IsInhibited(d)) continue; // "diventa un numero e basta" - Flow's whole role (granting rerolls) IS its Vibrazione, so inhibited Flow grants 0, not round(x1)=1
+
                 float mult = GetNetMultiplier(d);
                 int rounded = UnityEngine.Mathf.RoundToInt(mult);
                 bool isHigh = d.instance.data != null && d.instance.data.GetRange(d.rolledValue) == ValueRange.High;

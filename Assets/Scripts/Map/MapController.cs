@@ -11,7 +11,7 @@ namespace Rollrate.Map
     /// buttons in a grid, draws simple connection lines, tracks the
     /// player's position, and enters a node's scene when clicked.
     ///
-    /// SCOPE SO FAR: Merchant/Bonfire/Dismantle/Conflict/Overload/Glitch/
+    /// SCOPE SO FAR: Merchant/Bonfire/Furnace/Conflict/Overload/Glitch/
     /// Archive are all fully functional. Only Terminal (Boss +
     /// Recalibration) still logs a placeholder message instead of
     /// transitioning.
@@ -34,9 +34,9 @@ namespace Rollrate.Map
         [Header("Node Type -> Scene mapping (leave blank for 'not yet wired')")]
         [SerializeField] private string merchantSceneName = "ShopScene";
         [SerializeField] private string bonfireSceneName = "RestNodeScene";
-        [SerializeField] private string dismantleSceneName = "DismantleScene";
+        [SerializeField] private string furnaceSceneName = "FurnaceScene";
         [SerializeField] private string combatSceneName = "CombatScene";
-        [SerializeField] private string metaSceneName = "MetaScene";
+        [SerializeField] private string mainMenuSceneName = "MainMenuScene"; // Final Victory only - see ApplyRecalibration
         [SerializeField] private string archiveSceneName = "ArchiveScene";
 
         [Header("Combat Node Setup")]
@@ -217,7 +217,7 @@ namespace Rollrate.Map
             {
                 case NodeType.Merchant: return merchantSceneName;
                 case NodeType.Bonfire: return bonfireSceneName;
-                case NodeType.Dismantle: return dismantleSceneName;
+                case NodeType.Furnace: return furnaceSceneName;
                 case NodeType.Conflict: return combatSceneName;
                 case NodeType.Overload: return combatSceneName;
                 case NodeType.Archive: return archiveSceneName;
@@ -247,6 +247,37 @@ namespace Rollrate.Map
                 return;
             }
 
+            var mapState = RunManager.Instance.State;
+
+            // Singolarità (design doc Section 7, Grade V Modificatore di Sistema):
+            // moving toward any non-Conflict node has a 33% chance of an ambush
+            // battle first (50/50 Base/Elite) - the click is redirected entirely
+            // to Combat; the player's position does NOT advance, so their next
+            // click on this same node tries again (possibly ambushed again).
+            if (mapState.currentEchelon == 5 && node.type != NodeType.Conflict && node.type != NodeType.Terminal)
+            {
+                if (Random.value < 0.33f)
+                {
+                    if (enemyRegistry == null)
+                    {
+                        Debug.LogError("[MapController] No Enemy Registry assigned - can't pick an ambush enemy for Singolarità.");
+                    }
+                    else
+                    {
+                        EnemyTier ambushTier = Random.value < 0.5f ? EnemyTier.Base : EnemyTier.Elite;
+                        EnemyData ambushEnemy = enemyRegistry.GetRandom(mapState.currentEchelon, ambushTier);
+                        if (ambushEnemy != null)
+                        {
+                            Debug.Log($"[MapController] Singolarità: ambush triggered ({ambushTier}) while moving to {node.type}.");
+                            CombatNodeContext.PendingEnemy = ambushEnemy;
+                            _pendingSceneName = combatSceneName;
+                            NodeSceneLoader.EnterNode(combatSceneName);
+                            return; // player's position is unchanged - same node must be re-clicked after the ambush
+                        }
+                    }
+                }
+            }
+
             if (node.type == NodeType.Conflict || node.type == NodeType.Overload || node.type == NodeType.Terminal)
             {
                 if (enemyRegistry == null)
@@ -255,15 +286,14 @@ namespace Rollrate.Map
                     return;
                 }
 
-                var state = RunManager.Instance.State;
                 EnemyTier tier = node.type == NodeType.Terminal ? EnemyTier.Guardian
                                 : node.type == NodeType.Overload ? EnemyTier.Elite
                                 : EnemyTier.Base;
-                EnemyData enemy = enemyRegistry.GetRandom(state.currentEchelon, tier);
+                EnemyData enemy = enemyRegistry.GetRandom(mapState.currentEchelon, tier);
 
                 if (enemy == null)
                 {
-                    Debug.LogError($"[MapController] No {tier} enemy found for Grade {state.currentEchelon} - check the Enemy Registry.");
+                    Debug.LogError($"[MapController] No {tier} enemy found for Grade {mapState.currentEchelon} - check the Enemy Registry.");
                     return;
                 }
 
@@ -296,7 +326,7 @@ namespace Rollrate.Map
                 NodeType.Archive,
                 NodeType.Overload,
                 NodeType.Bonfire,
-                NodeType.Dismantle
+                NodeType.Furnace
             };
             return possibleOutcomes[Random.Range(0, possibleOutcomes.Length)];
         }
@@ -326,49 +356,30 @@ namespace Rollrate.Map
         }
 
         /// <summary>
-        /// Post-Terminal-victory transition (design doc Section 7): pay the
-        /// Tassa di Sfarzo (a percentage of CURRENT Scrap - always payable
-        /// by construction, since it's proportional rather than a fixed
-        /// amount), then mandatory Core Die evolution (the ONLY way the
-        /// Core evolves - never via the Shop), then advance to the next
-        /// Grade's Page 1. Grade V has no further Grade to advance to -
-        /// treated as a full run completion for now.
+        /// Post-Terminal-victory REACTION only (design doc Section 7): Core
+        /// evolution, Tassa di Sfarzo, and Grade advance are ALL already
+        /// done by RunManager.ApplyGuardianVictory (called from
+        /// RollKeepUIController right when the Guardian dies) - this only
+        /// reacts to whatever Grade that left us in: generate the new
+        /// Page 1, or (currentEchelon's sentinel value 6, meaning Sovereign
+        /// was just defeated) perform a FULL reset and return to the Main
+        /// Menu directly - no Meta screen for Final Victory (design doc
+        /// Section 7: "nessuna schermata di scelta dadi... il gioco si
+        /// resetta completamente"). A dedicated narrative interlude is a
+        /// future point, not yet designed.
         /// </summary>
         private void ApplyRecalibration(GameState state)
         {
-            // Tax percentage for the transition LEAVING the current grade (I->II 10%, II->III 15%, III->IV 20%, IV->V 25%).
-            float[] taxByGrade = { 0.10f, 0.15f, 0.20f, 0.25f };
-
-            if (state.currentEchelon <= taxByGrade.Length)
+            if (state.currentEchelon > 5)
             {
-                int tax = Mathf.CeilToInt(state.scrap * taxByGrade[state.currentEchelon - 1]);
-                state.scrap -= tax;
-                Debug.Log($"[MapController] Recalibrazione: Tassa di Sfarzo pagata ({tax} Scrap).");
-            }
-
-            if (state.coreDie.nextTier != null)
-            {
-                Debug.Log($"[MapController] Recalibrazione: Core evoluto da {state.coreDie.displayName} a {state.coreDie.nextTier.displayName}.");
-                state.coreDie = state.coreDie.nextTier;
+                Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! Reset completo, verso il menu principale.");
+                RunManager.Instance.StartNewRun(); // full reset - Core/Scrap/everything back to defaults, unlike Fragmentation
+                SceneManager.LoadScene(mainMenuSceneName);
             }
             else
             {
-                Debug.Log($"[MapController] Recalibrazione: Core già al Grado massimo ({state.coreDie.displayName}) - nessuna evoluzione.");
-            }
-
-            if (state.currentEchelon < 5)
-            {
-                state.currentEchelon++;
-                Debug.Log($"[MapController] Recalibrazione completata - avanzato a Grado {state.currentEchelon}.");
+                Debug.Log($"[MapController] Recalibrazione: nuova Pagina 1 del Grado {state.currentEchelon}.");
                 GenerateAndRenderPage(1);
-            }
-            else
-            {
-                // PUNTO APERTO: l'esito di vittoria completa (Sovereign sconfitto) e' ancora
-                // da progettare per intero (design doc Sezione 7, "Vittoria completa") - per ora
-                // manda comunque alla schermata Meta senza nessuna ricompensa specifica.
-                Debug.Log("[MapController] Guardiano di Grado V sconfitto - run completata! Verso la schermata Meta.");
-                SceneManager.LoadScene(metaSceneName);
             }
         }
     }

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 9120898353639613308}
   - component: {fileID: 8933431096197674905}
   - component: {fileID: 5421564612006311890}
-  - component: {fileID: 5441756864705817786}
+  - component: {fileID: 447060809855550535}
   m_Layer: 5
   m_Name: MetaRow
   m_TagString: Untagged
@@ -78,7 +78,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5441756864705817786
+--- !u!114 &447060809855550535
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -87,13 +87,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 2510496046242653760}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 104b28ff74ba2a743aa58371ee41e467, type: 3}
+  m_Script: {fileID: 11500000, guid: a93f052498af5c6458046226a89cb18e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameText: {fileID: 2143745091396588849}
-  statusText: {fileID: 5476029009393973949}
-  normalColor: {r: 0, g: 0.29234123, b: 1, a: 1}
-  blockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  typeColorImage: {fileID: 5421564612006311890}
+  dieLabel: {fileID: 2143745091396588849}
+  effectsLabel: {fileID: 5476029009393973949}
+  selectedIndicator: {fileID: 0}
 --- !u!1 &6029682041107856318
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 882598358635135093}
   - component: {fileID: 5476029009393973949}
   m_Layer: 5
-  m_Name: TxtEchelon
+  m_Name: Effects
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -240,7 +240,7 @@ GameObject:
   - component: {fileID: 5426201070704723344}
   - component: {fileID: 2143745091396588849}
   m_Layer: 5
-  m_Name: TxtOfferName
+  m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

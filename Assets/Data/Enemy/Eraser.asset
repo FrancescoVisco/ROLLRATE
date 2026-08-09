@@ -23,3 +23,4 @@ MonoBehaviour:
   inhibitorDie: {fileID: 11400000, guid: d0c212ffaaa32d047a4395e186a03c5c, type: 2}
   abilityDescription: Threshold +3 whenever a Frequency triggers
   icon: {fileID: 0}
+  coreEvolutionOnDefeat: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}

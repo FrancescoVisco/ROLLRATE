@@ -22,5 +22,5 @@ MonoBehaviour:
   inhibitorDie: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
   abilityId: 13
   abilityDescription: Echo dice add half their value to Threshold
-  coreEvolutionOnDefeat: {fileID: 11400000, guid: 5bf63e6e24fe16347880c555ba3058ee, type: 2}
+  coreEvolutionOnDefeat: {fileID: 0}
   icon: {fileID: 0}

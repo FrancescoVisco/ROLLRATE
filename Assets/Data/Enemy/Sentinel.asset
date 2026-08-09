@@ -22,5 +22,5 @@ MonoBehaviour:
   inhibitorDie: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
   abilityId: 5
   abilityDescription: If Core is Even, also inhibits value 1
-  coreEvolutionOnDefeat: {fileID: 11400000, guid: 47e5a84e572d098409989718c0683449, type: 2}
+  coreEvolutionOnDefeat: {fileID: 0}
   icon: {fileID: 0}

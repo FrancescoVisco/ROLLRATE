@@ -65,6 +65,50 @@ namespace Rollrate.Combat
         }
 
         /// <summary>
+        /// READ-ONLY preview of the extraThreshold that ApplyPreCheckModifiers
+        /// would add, for the abilities that are safe to compute repeatedly
+        /// with no side effects (Static, Lockdown, Tax; Jammer's list-add is
+        /// idempotent so it's included too). For live UI display only
+        /// (design doc Section 4, "valori aggiornati in tempo reale") -
+        /// addresses the on-screen Threshold not matching the real one used
+        /// at Resolve. Deliberately EXCLUDES Void (Avatar): its contribution
+        /// requires redirecting Echo dice, a side effect that must only
+        /// happen once, at the real Resolve - Avatar's true Threshold this
+        /// turn is only known after pressing Resolve.
+        /// </summary>
+        public static int PreviewExtraThreshold(EnemyController enemy, TurnContext ctx, GameState playerState)
+        {
+            int extraThreshold = 0;
+
+            switch (enemy.AbilityId)
+            {
+                case EnemyAbilityId.Static: // Fragment
+                    if (enemy.LastInhibitedValue == 1 || enemy.LastInhibitedValue == 2) extraThreshold += 2;
+                    break;
+
+                case EnemyAbilityId.Lockdown: // Compiler
+                    extraThreshold += ctx.GetOfType(DieType.Flow).Count;
+                    break;
+
+                case EnemyAbilityId.Jammer: // Sentinel - idempotent (guarded by Contains), safe to call repeatedly
+                    if (ctx.coreIsEven && !ctx.extraInhibitedValues.Contains(1)) ctx.extraInhibitedValues.Add(1);
+                    break;
+
+                case EnemyAbilityId.Tax: // Inquisitor
+                    if (playerState != null)
+                    {
+                        int belowD12 = playerState.dicePool.Count(d => d.data != null && d.data.faces < 12);
+                        extraThreshold += belowD12 * 3;
+                    }
+                    break;
+
+                    // Void (Avatar) deliberately omitted - see summary above.
+            }
+
+            return extraThreshold;
+        }
+
+        /// <summary>
         /// Called once per turn, right before ResolveCheck. Applies
         /// Static/Lockdown/Jammer/Tax's Threshold/Inhibition changes
         /// directly onto EnemyController/TurnContext, and returns

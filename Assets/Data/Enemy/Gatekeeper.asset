@@ -22,5 +22,5 @@ MonoBehaviour:
   inhibitorDie: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
   abilityId: 3
   abilityDescription: Threshold permanently +2 each turn
-  coreEvolutionOnDefeat: {fileID: 11400000, guid: c88a7306b0a6c2c4498497be1fe63f44, type: 2}
+  coreEvolutionOnDefeat: {fileID: 11400000, guid: 9d99744f0a6285140890d5c085dd3a46, type: 2}
   icon: {fileID: 0}

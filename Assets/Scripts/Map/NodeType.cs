@@ -9,12 +9,12 @@ namespace Rollrate.Map
     {
         Entry,          // Ingresso - starting position, no gameplay content, never clickable
         Conflict,       // Nodo Conflitto
-        Merchant,       // Nodo Mercante
+        Merchant,       // Nodo Dice Dealer
         Archive,        // Nodo Archivio
         Overload,       // Nodo Sovraccarico (Elite)
         Glitch,         // Nodo Glitch
-        Bonfire,        // Nodo Falò
-        Dismantle,      // Nodo Smantellamento
+        Bonfire,        // Nodo Rest
+        Furnace,        // Nodo Furnace - fonde 2 dadi dello stesso Tipo (design doc Section 7)
         Terminal        // Nodo Terminale (Boss + Ricalibrazione) - forced, not rolled
     }
 }

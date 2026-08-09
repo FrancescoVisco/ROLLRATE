@@ -21,6 +21,9 @@ namespace Rollrate.UI
     {
         public static RollKeepUIController Instance { get; private set; }
 
+        /// <summary>Exposed read-only so GameHUD can compute the true (ability-adjusted) Threshold for display - see GameHUD.RefreshStats.</summary>
+        public TurnContext Context => _turn.Context;
+
         [Header("Scene References")]
         [SerializeField] private RollableDie dieViewPrefab;
         [SerializeField] private Transform handContainer;
@@ -33,6 +36,12 @@ namespace Rollrate.UI
         [SerializeField] private Button resolveButton;
         [SerializeField] private TextMeshProUGUI rerollsRemainingText;
         [SerializeField] private TextMeshProUGUI resultText;
+        [Tooltip("Live preview of your current Power sum (before Resolve). Updates after Roll, Reroll, and Echo assignment.")]
+        [SerializeField] private TextMeshProUGUI liveAttackText;
+        [Tooltip("Live preview of your current Stability sum (before Resolve). Updates after Roll, Reroll, and Echo assignment.")]
+        [SerializeField] private TextMeshProUGUI liveDefenseText;
+        [Tooltip("Live preview of the enemy's Attack this turn (base + Inhibitor Parity + pending bonuses). Updates after Roll.")]
+        [SerializeField] private TextMeshProUGUI liveEnemyAttackText;
         [Tooltip("Shows what the player can currently do - refreshed every time state changes.")]
         [SerializeField] private TextMeshProUGUI statusText;
         [SerializeField] private EnemyController enemyController;
@@ -136,6 +145,7 @@ namespace Rollrate.UI
             SetTurnButtonsState(canRoll: false, canResolve: true);
             RefreshRerollsUI();
             RefreshVibrationSummary();
+            RefreshLiveCombatStats();
             LogHandDiagnostics(ctx);
         }
 
@@ -205,6 +215,7 @@ namespace Rollrate.UI
                         FindViewFor(_pendingEchoSource)?.SetPendingEchoSource(false);
                         _pendingEchoSource = null;
                         RefreshEchoLinkedVisuals(); // the target(s) now show the same yellow highlight, addressing "non si capisce che lo stai selezionando"
+                        RefreshLiveCombatStats();
                         LogHandDiagnostics(_turn.Context); // effective values changed - show the new totals
                     }
                     RefreshStatusText();
@@ -230,6 +241,28 @@ namespace Rollrate.UI
             _turn.ToggleRerollMark(clicked);
             view.RefreshHeld();
             RefreshRerollsUI();
+        }
+
+        /// <summary>
+        /// Live preview of Attack/Defense/enemy Attack (design doc Section
+        /// 4, "valori aggiornati in tempo reale") - shows what Resolve
+        /// WOULD do right now, without triggering any Effect/Ability side
+        /// effects (Void's Echo redirect, Suppress's reduction, etc. only
+        /// actually apply once, at the real Resolve). Call after Roll,
+        /// Reroll, and any successful Echo assignment.
+        /// </summary>
+        private void RefreshLiveCombatStats()
+        {
+            if (_turn.Context != null)
+            {
+                if (liveAttackText != null) liveAttackText.text = $"Attack: {_turn.Context.ComputeAttack():0.#}";
+                if (liveDefenseText != null) liveDefenseText.text = $"Defense: {_turn.Context.ComputeDefense():0.#}";
+            }
+
+            if (enemyController != null && liveEnemyAttackText != null)
+            {
+                liveEnemyAttackText.text = $"Enemy Attack: {enemyController.PreviewAttackForThisTurn()}";
+            }
         }
 
         private RollableDie FindViewFor(HeldDieState dieState)
@@ -295,6 +328,7 @@ namespace Rollrate.UI
 
             RefreshRerollsUI();
             RefreshVibrationSummary();
+            RefreshLiveCombatStats();
         }
 
         private void RefreshRerollsUI()
@@ -449,7 +483,7 @@ namespace Rollrate.UI
                 resultText.text = $"{attackLine}\n{defenseLine}{extras}";
             }
 
-            Debug.Log($"[RollKeepUIController] Resolve: Attack {result.attack:0} ({(result.attackSucceeded ? "success" : "failed")}), Defense {result.defense:0} ({(result.defenseHeld ? "held" : $"-{result.damageTaken} HP")})");
+            Debug.Log($"[RollKeepUIController] Resolve: Attack {result.attack:0.#} vs Threshold {thresholdThisTurn} ({(result.attackSucceeded ? $"success, Excess {result.excess}" : "failed")}), Defense {result.defense:0.#} vs enemy Attack {enemyAttackThisTurn} ({(result.defenseHeld ? "held" : $"-{result.damageTaken} HP")})");
 
             // Without this call GameHUD only refreshed once at scene start - HP changed
             // inside GameState/EnemyController but the on-screen text stayed frozen.
@@ -466,6 +500,8 @@ namespace Rollrate.UI
             {
                 if (statusText != null) statusText.text = $"{enemyController.Data?.displayName} defeated!";
                 _turnInProgress = false; // stop any further input before the scene unloads
+
+                if (state != null) state.enemiesDefeatedThisRun++; // Meta screen's run summary (design doc Section 7)
 
                 if (enemyController.Data != null && enemyController.Data.tier == EnemyTier.Guardian)
                 {

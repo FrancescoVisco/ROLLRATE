@@ -91,6 +91,24 @@ namespace Rollrate.Combat
             return attack;
         }
 
+        /// <summary>
+        /// Same formula as GetAttackForThisTurnAndClearPending, but READ-ONLY
+        /// - does not clear the Suppress reduction. For live UI display only
+        /// (design doc Section 4, "valori aggiornati in tempo reale") - the
+        /// real Resolve must still call GetAttackForThisTurnAndClearPending.
+        /// NOTE: does not include enemy-Ability adjustments from
+        /// EnemyAbilityResolver.ApplyPreCheckModifiers (e.g. Breach halving
+        /// this) - those can have side effects (Avatar's Void redirects Echo
+        /// dice) and must only run once, at the real Resolve.
+        /// </summary>
+        public int PreviewAttackForThisTurn()
+        {
+            int attack = BaseAttack
+                + (_inhibitorBoostsAttackThisTurn ? InhibitorParityBoost : 0)
+                + PendingNextTurnAttackBonus;
+            return Mathf.Max(0, attack - _pendingAttackReduction);
+        }
+
         /// <summary>Call once per turn, right after ResolveCheck, to clear the "pending from last turn" bonuses and the per-turn reroll bonus - they've been read and applied already.</summary>
         public void ClearPerTurnAbilityState()
         {

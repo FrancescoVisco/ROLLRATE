@@ -118,6 +118,15 @@ namespace Rollrate.Core
         /// the Grade being LEFT), and advances to the next Grade/Page 1.
         /// No-op past Grade V (Sovereign has no further ascent).
         /// </summary>
+        /// <summary>
+        /// SOLE AUTHORITY for Guardian-victory progression (Core evolution,
+        /// Tassa di Sfarzo, Grade advance) - MapController.ApplyRecalibration
+        /// used to ALSO do all three independently, causing every Guardian
+        /// victory to double-evolve the Core, double-charge the tax, and
+        /// skip a whole Grade. MapController now only reacts to the state
+        /// this method already set (generate the new Page, or load Meta on
+        /// final victory) - see MapController.ApplyRecalibration.
+        /// </summary>
         public void ApplyGuardianVictory(EnemyData guardian)
         {
             if (guardian != null && guardian.coreEvolutionOnDefeat != null)
@@ -132,11 +141,19 @@ namespace Rollrate.Core
                 int tax = Mathf.RoundToInt(State.scrap * taxRate);
                 State.scrap = Mathf.Max(0, State.scrap - tax);
                 State.currentEchelon = currentGrade + 1;
-                State.currentPage = 1;
+                // currentPage is deliberately NOT touched here - MapController.OnAnySceneUnloaded
+                // reads it right after this call to decide "next Page of same Grade" vs
+                // "Recalibrate" (Page 3 check); GenerateAndRenderPage(1) resets it correctly
+                // once Recalibration actually runs. Setting it here would make that check see
+                // Page 1 instead of 3, generating the WRONG next page (skipping the new Grade's
+                // Page 1 entirely).
                 Debug.Log($"[RunManager] Guardian defeated - Core evolved to {State.coreDie?.displayName}, Tassa di Sfarzo -{tax} Scrap ({taxRate:P0} of Grade {currentGrade}), advancing to Grade {State.currentEchelon}.");
             }
             else
             {
+                // Sentinel value (6 = "past Grade V") so MapController knows the run is
+                // complete without needing to re-derive that from anything else.
+                State.currentEchelon = 6;
                 Debug.Log($"[RunManager] Sovereign (Grade V Guardian) defeated - Core evolved to {State.coreDie?.displayName}. Run complete.");
                 // PUNTO APERTO: l'esito di vittoria completa (design doc Sezione 7,
                 // "Vittoria completa") resta da progettare per intero.
@@ -144,23 +161,38 @@ namespace Rollrate.Core
         }
 
         /// <summary>
-        /// Call this when the player's HP reaches 0. Applies the
-        /// Fragmentation rule (Core Die + Scrap persist, everything else
-        /// resets) and sends the player to the Meta screen.
-        ///
-        /// PUNTO APERTO: the Meta end-of-run screen (design doc Section 7)
-        /// - showing up to 3 randomly chosen dice from
-        /// State.unlockedThisRun, letting the player pick 1 to keep,
-        /// destroying the rest - is not yet implemented (a later point).
-        /// For now this just applies Fragmentation and loads the scene;
-        /// the pool-inheritance step needs to happen in that scene's
-        /// controller before ApplyFragmentation clears unlockedThisRun.
+        /// Call this when the player's HP reaches 0. Loads the Meta screen
+        /// WITHOUT fragmenting yet - MetaController needs to read
+        /// State.unlockedThisRun (and currentEchelon/enemiesDefeatedThisRun
+        /// for the run summary) while they're still intact. Call
+        /// FinalizeFragmentationAndContinue once the player has made their
+        /// choice there.
         /// </summary>
         public void HandleDefeat()
         {
-            Debug.Log($"[RunManager] Defeat. Fragmenting. Core stays at {State.coreDie?.displayName}, Scrap kept: {State.scrap}. Dice unlocked this run (Meta candidates, not yet wired): {State.unlockedThisRun.Count}");
-            State.ApplyFragmentation(startingHp);
+            Debug.Log($"[RunManager] Defeat - going to Meta screen. Core: {State.coreDie?.displayName}, Scrap: {State.scrap}, Grade reached: {State.currentEchelon}, enemies defeated: {State.enemiesDefeatedThisRun}, dice unlocked this run: {State.unlockedThisRun.Count}");
             UnityEngine.SceneManagement.SceneManager.LoadScene(metaSceneName);
+        }
+
+        /// <summary>
+        /// Called by MetaController once the player has picked their die
+        /// (or there was nothing to pick from). Applies Fragmentation
+        /// (Core Die + Scrap persist, everything else resets) THEN adds
+        /// the chosen die (if any) to the now-empty pool as the sole
+        /// survivor (design doc Section 7, Meta-progressione).
+        /// </summary>
+        public void FinalizeFragmentationAndContinue(DieInstance chosenDie)
+        {
+            State.ApplyFragmentation(startingHp);
+            if (chosenDie != null)
+            {
+                State.AddDieToPool(chosenDie, fromRunUnlock: false);
+                Debug.Log($"[RunManager] Fragmentation applied - kept {chosenDie.data?.displayName} ({chosenDie.type}) from this run.");
+            }
+            else
+            {
+                Debug.Log("[RunManager] Fragmentation applied - no die was kept this time.");
+            }
         }
     }
 }

@@ -65,9 +65,18 @@ namespace Rollrate.UI
 
             if (thresholdText != null && enemyController != null)
             {
-                // PUNTO APERTO (Nemici): mostra solo la Soglia base per ora - i modificatori
-                // delle abilita' nemiche torneranno quando ricostruiamo quel sistema.
-                thresholdText.text = $"Threshold: {enemyController.GetThresholdForThisTurn()}";
+                // Base Threshold + Parity/permanent/pending bonuses (always safe), PLUS a
+                // side-effect-free preview of the ability-specific bonus (Static/Lockdown/
+                // Tax - see EnemyAbilityResolver.PreviewExtraThreshold) if a turn is
+                // currently active. Avatar's Void is the one exception that can't be
+                // safely previewed (see that method) - its true Threshold only shows
+                // correctly in the Result Text after Resolve.
+                int baseThreshold = enemyController.GetThresholdForThisTurn();
+                var ctx = RollKeepUIController.Instance?.Context;
+                int extraThreshold = ctx != null
+                    ? EnemyAbilityResolver.PreviewExtraThreshold(enemyController, ctx, state)
+                    : 0;
+                thresholdText.text = $"Threshold: {baseThreshold + extraThreshold}";
             }
 
             if (dicePoolCountText != null)

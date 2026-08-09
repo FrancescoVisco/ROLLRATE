@@ -20,11 +20,12 @@ namespace Rollrate.Simulation
     /// <summary>
     /// Everything the simulator needs configured, mirroring the same data
     /// the real game reads from RunManager/ShopController/FurnaceController.
-    /// Set up once in the Run Simulator window, reused across however many
-    /// campaigns you run.
+    /// A real asset (like ShopCostTable/EnemyRegistry) - set it up once,
+    /// save it, and just assign the SAME asset in the Run Simulator
+    /// window every time, instead of re-entering everything from scratch.
     /// </summary>
-    [Serializable]
-    public class RunSimConfig
+    [CreateAssetMenu(fileName = "RunSimConfig", menuName = "Rollrate/Run Simulator Config")]
+    public class RunSimConfig : ScriptableObject
     {
         [Header("Starting Run")]
         public DieData startingCoreDie;

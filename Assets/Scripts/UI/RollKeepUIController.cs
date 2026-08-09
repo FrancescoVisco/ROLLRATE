@@ -224,6 +224,12 @@ namespace Rollrate.UI
 
                 if (clicked.instance?.type == DieType.Echo)
                 {
+                    // "Diventa un numero e basta" (design doc Section 5, Inibizione) applies to
+                    // Echo's BASE role too, not just its attached Effects - an inhibited Echo
+                    // die can't transfer its value at all, same principle already applied to
+                    // Flow's reroll-granting.
+                    if (_turn.Context.IsInhibited(clicked)) return;
+
                     _pendingEchoSource = clicked;
                     view.SetPendingEchoSource(true);
                     RefreshStatusText();

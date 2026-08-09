@@ -25,7 +25,6 @@ namespace Rollrate.Simulation
         public int ArchiveAmbitionWins, ArchiveAmbitionTotal;
 
         public int DismantleCount;
-        public int CollectionSwapCount;
 
         public long TotalTurnsInWonFights;
         public int WonFightsCount;
@@ -169,7 +168,6 @@ namespace Rollrate.Simulation
 
             sb.AppendLine();
             sb.AppendLine($"--- Smantellamenti totali: {DismantleCount} ---");
-            sb.AppendLine($"--- Cambi modulo in Collezione/Falo totali: {CollectionSwapCount} ---");
 
             return sb.ToString();
         }

@@ -12,32 +12,25 @@ namespace Rollrate.UI
     public class DebugMapNodeButtons : MonoBehaviour
     {
         [SerializeField] private string shopSceneName = "ShopScene";
-        [SerializeField] private string collectionSceneName = "CollectionScene";
         [SerializeField] private string restSceneName = "RestNodeScene";
-        [SerializeField] private string dismantleSceneName = "DismantleScene";
+        [SerializeField] private string furnaceSceneName = "FurnaceScene";
 
-        /// <summary>Merchant node: buy dice/modules, reroll offers, paid Repair/Increase Max HP.</summary>
+        /// <summary>Merchant node: buy dice, reroll offers, paid Increase Max HP.</summary>
         public void EnterShop()
         {
             NodeSceneLoader.EnterNode(shopSceneName);
         }
 
-        /// <summary>Collection screen: equip/swap owned modules per slot. Free, no HP/Scrap effect.</summary>
-        public void EnterCollection()
-        {
-            NodeSceneLoader.EnterNode(collectionSceneName);
-        }
-
-        /// <summary>Rest node (Falò): free half-missing-HP heal (once per visit), then can open Collection.</summary>
+        /// <summary>Rest node (Falò): free half-missing-HP heal (once per visit).</summary>
         public void EnterRest()
         {
             NodeSceneLoader.EnterNode(restSceneName);
         }
 
-        /// <summary>Dismantle node: destroy an owned die/module for Grade-based Scrap.</summary>
-        public void EnterDismantle()
+        /// <summary>Furnace node: fuse 2 owned dice of the same Type.</summary>
+        public void EnterFurnace()
         {
-            NodeSceneLoader.EnterNode(dismantleSceneName);
+            NodeSceneLoader.EnterNode(furnaceSceneName);
         }
     }
 }

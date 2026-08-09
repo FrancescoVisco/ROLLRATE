@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 9120898353639613308}
   - component: {fileID: 8933431096197674905}
   - component: {fileID: 5421564612006311890}
-  - component: {fileID: 1255186220516932253}
+  - component: {fileID: 246706269212306478}
   m_Layer: 5
-  m_Name: DismantleRow
+  m_Name: FurnaceRow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 170, y: 170}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8933431096197674905
 CanvasRenderer:
@@ -78,7 +78,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &1255186220516932253
+--- !u!114 &246706269212306478
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -87,13 +87,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2510496046242653760}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6135da2aa78100f4fbb9c19f74881666, type: 3}
+  m_Script: {fileID: 11500000, guid: afd948b7003cc974aa09192488fab3b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameText: {fileID: 2143745091396588849}
-  rewardText: {fileID: 5476029009393973949}
-  normalColor: {r: 0, g: 0, b: 0, a: 1}
-  blockedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  dieImage: {fileID: 5421564612006311890}
+  dieLabel: {fileID: 2143745091396588849}
+  effectsLabel: {fileID: 5476029009393973949}
 --- !u!1 &6029682041107856318
 GameObject:
   m_ObjectHideFlags: 0
@@ -106,7 +105,7 @@ GameObject:
   - component: {fileID: 882598358635135093}
   - component: {fileID: 5476029009393973949}
   m_Layer: 5
-  m_Name: TxtOfferCost
+  m_Name: TxtEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -159,7 +158,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Cost
+  m_text: Effect
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -186,8 +185,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 13
-  m_fontSizeBase: 13
+  m_fontSize: 8
+  m_fontSizeBase: 8
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -240,7 +239,7 @@ GameObject:
   - component: {fileID: 5426201070704723344}
   - component: {fileID: 2143745091396588849}
   m_Layer: 5
-  m_Name: TxtOfferName
+  m_Name: TxtName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -320,8 +319,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
-  m_fontSizeBase: 15
+  m_fontSize: 10
+  m_fontSizeBase: 10
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

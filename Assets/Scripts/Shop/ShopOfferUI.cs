@@ -26,13 +26,13 @@ namespace Rollrate.Shop
 
         private Action _onClicked;
 
-        public void Setup(DieInstance offer, int cost, Action onClicked)
+        public void Setup(DieInstance offer, string costLabel, Action onClicked)
         {
             _onClicked = onClicked;
 
             if (typeColorImage != null) typeColorImage.color = DieTypeColors.For(offer.type);
             if (dieLabel != null) dieLabel.text = $"{offer.type} D{offer.data?.faces}";
-            if (costText != null) costText.text = $"{cost} Scrap";
+            if (costText != null) costText.text = costLabel;
 
             if (effectsLabel != null)
             {
